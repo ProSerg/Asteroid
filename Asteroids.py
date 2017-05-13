@@ -1,0 +1,12 @@
+import pyglet
+from Asteroid.GameScene import GameScene
+
+
+def init_world():
+    DEBUG_MOD = True
+    game_scene = GameScene(width=800, height=600, DEBUG_MOD=DEBUG_MOD)
+    game_scene.generate_scene()
+
+if __name__ == '__main__':
+    init_world()
+    pyglet.app.run()
