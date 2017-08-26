@@ -1,129 +1,89 @@
-import pyglet, copy
-from pyglet.image import Animation, AnimationFrame
-from pyglet.resource import Loader
+from Asteroid.common.AnimationManager import *
+from Asteroid.common.Resources import *
 
-import queue
 
 window = pyglet.window.Window()
 
 white = (1, 1, 1, 1)
 black = (0, 0, 0, 1)
-pyglet.gl.glClearColor(*white)
+pyglet.gl.glClearColor(*black)
 
 effects = []
 use_effect = 1
 
-
-resources_paths = [
+resource_paths = [
     "../../resources/Fires",
     "../../resources/Effects/Grids",
+    "../../resources/Effects/Blue Effects",
     "../../resources/Blue/",
     "../../resources/Animations/gif/",
 ]
 
-loader = Loader()
-loader.path = resources_paths
-loader.reindex()
-
-
-def create_effect(image_frames, duration=1.0, loop=False):
-    frames = []
-    for img in image_frames:
-        image = loader.image(img)
-        frames.append(AnimationFrame(image, duration))
-    if loop is False:
-        frames[len(image_frames) - 1].duration = None
-    return Animation(frames=frames)
-
-    # Create a sprite instance.
-
-def create_effect_animation_by_gif(image_name, duration=1.0):
-    image = loader.animation(name=image_name)
-    return image
-
-
-def create_effect_animation(image_name, duration, rows, columns):
-    effect_seq = pyglet.image.ImageGrid(loader.image(image_name), rows, columns)
-    effect_frames = []
-    for row in range(rows, 0, -1):
-        end = row * columns
-        start = end - (columns -1) -1
-        for effect_frame in effect_seq[start:end:1]:
-            effect_frames.append(AnimationFrame(effect_frame, duration))
-
-    effect_frames[(rows * columns) -1].duration = None
-    return Animation(effect_frames)
-
-#..\\..\\resources\\Effects\\Grids\\
-effect_anims = [create_effect_animation('_LPE__Elemental_Burst_by_LexusX2.png', 0.03, 6, 5),
-                create_effect_animation('_LPE__Fire_Arrow_by_LexusX2.png', 0.03, 9, 5),
-                create_effect_animation('_LPE__Healing_Circle_by_LexusX2.png', 0.1, 10, 5),
-                create_effect_animation('_LPE__Flaming_Time_by_LexusX2.png', 0.1, 5, 5),
-                create_effect_animation('_LPE__Gale_by_LexusX3.png', 0.1, 8, 5)
-                ]
-
-image_frames = (
-                'fire_16.png',
-                'fire_27.png',
-                'fire_32.png',
-                'fire_48.png',
-                'fire_71.png',
-                'fire_85.png',
-                'fire_94.png',
-                'fire_32.png',
-                'fire_27.png',
-                'fire_16.png',
-                )
-
 gif_name = 'explosion-boom.gif'
 gif_name_star = 'Sample24.gif'
+blue_effects = [
+    "1_0.png",
+    "1_1.png",
+    "1_2.png",
+    "1_3.png",
+    "1_4.png",
+    "1_5.png",
+    "1_6.png",
+    "1_7.png",
+    "1_8.png",
+    "1_9.png",
+    "1_10.png",
+    "1_11.png",
+    "1_12.png",
+    "1_13.png",
+    "1_14.png",
+    "1_15.png",
+    "1_16.png"
+]
 
-class EffectSprite(pyglet.sprite.Sprite):
-    def on_animation_end(self):
-        self.delete()
-        effects.remove(self)
+loader = ResourcesLoader(resource_paths)
 
+anim_manager = AnimationManager(loader=loader, batch=pyglet.graphics.Batch())
 
-class EffectLoopSprite(pyglet.sprite.Sprite):
-    def __init__(self, img , *args, **kwargs):
-        super(EffectLoopSprite, self).__init__(img=img, *args, **kwargs)
-        self.image_buffer = self.image
-        self._animation_ended = False
+anim_manager.createSpringEffect(name="portal", img="_LPE__Healing_Circle_by_LexusX2.png", scale=.6,
+                                type_image="grid", inverse=True, duration=0.03, rows=10, columns=5, rotation=0)
 
-    def restart(self):
-        if self._animation_ended is True:
-            self.image = self.image_buffer
-            self._animation_ended = False
+anim_manager.createSpringEffect(name="effect", img=gif_name, scale=1.0, type_image="gif")
 
-    def on_animation_end(self):
-        self._animation_ended = True
-        # self.delete()
+anim_manager.createSpringEffect(name="boom", img="boom_grid.png", scale=1.0, type_image="grid",
+                                duration=0.03, rows=4, columns=8, rotation=0)
 
-#animSpriteLoop = pyglet.sprite.Sprite(create_effect(image_frames, duration=0.3, loop=True))
-#animSpriteLoop.position = (0,0)
-#animSprite = pyglet.sprite.Sprite(create_effect(image_frames, duration=0.3, loop=False))
-#animSprite.position = (animSprite.width, 0)
-gifSprite = pyglet.sprite.Sprite(create_effect_animation_by_gif(gif_name_star))
-#gifSprite.position = (animSprite.width*2, 0)
+anim_manager.createSpringEffect(name="greenboom", img="_LPE__Elemental_Burst_by_LexusX2.png", scale=.6,
+                                type_image="grid", duration=0.03, rows=6, columns=5, rotation=0)
 
-boomEffect = EffectLoopSprite(create_effect_animation_by_gif(gif_name_star))
-boomEffect.position = (200, 300)
+anim_manager.createSpringEffect(name="boom2", img="explosion_01_strip13.png", scale=0.8,
+                                type_image="grid", duration=0.05, rows=1, columns=13, rotation=0)
+
+anim_manager.createSpringEffect(name="boom3", img="explosion_03_strip13.png", scale=0.8,
+                                type_image="grid", duration=0.05, rows=1, columns=13, rotation=0)
+
+anim_manager.createSpringEffect(name="blue", img=blue_effects, scale=0.5,
+                                type_image="frames", duration=0.02, rotation=0, looped=False, anchor_x=0, anchor_y=0)
+
+names = ["none", "boom", "greenboom", "boom2" , "boom3", "blue", "portal"]
 
 @window.event
 def on_mouse_press(x, y, button, modifiers):
     if(pyglet.window.mouse.LEFT == button):
-        effect = EffectSprite(effect_anims[use_effect - 1])
-        effect.position = (x - effect.width/2, y - effect.height/2)
-        effects.append(effect)
-        boomEffect.visible = True
+        # effect.position = ()
+        anim_manager.playAnimation(names[use_effect], x, y)
+        # boomEffect.visible = True
         #boomEffect.restart()
+
+
 
 @window.event
 def on_mouse_release(x, y, button, modifiers):
     if (pyglet.window.mouse.LEFT == button):
-        boomEffect.visible = False
-        for effect in effects:
-            effect.visible = False
+        pass
+        # boomEffect.visible = False
+        # for effect in effects:
+        #     effect.visible = False
 
 @window.event
 def on_key_press(symbol, modifiers):
@@ -151,13 +111,13 @@ def on_draw():
     window.clear()
     # animSprite.draw()
     # animSpriteLoop.draw()
-    boomEffect.draw()
+    # boomEffect.draw()
     # gifSprite.draw()
-    for effect in effects:
-        effect.draw()
+    anim_manager.Play()
 
-pyglet.app.run()
 
+if __name__ == "__main__":
+    pyglet.app.run()
 
 """
 w : switch background to white

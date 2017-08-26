@@ -3,7 +3,7 @@ from pyglet.window import key
 
 
 class BaseMechanics(object):
-    def __init__(self, resistance, rotate_speed, thrust, max_live=100):
+    def __init__(self, resistance, rotate_speed, thrust):
         self._resistance = resistance
         self._rotate_speed = rotate_speed
         self._thrust = thrust
@@ -15,7 +15,6 @@ class BaseMechanics(object):
         self.dy = 0
         self.da = 0
         self.dt = 0
-        self.max_live = max_live
 
     def _set_rotate_speed(self, rotate_speed):
         self._rotate_speed = rotate_speed
@@ -62,16 +61,21 @@ class BaseMechanics(object):
 
 
 class AsteroidMechanics(BaseMechanics):
-    def __init__(self, resistance, rotate_speed, thrust):
+    def __init__(self, resistance, rotate_speed, thrust, live=500):
         super(AsteroidMechanics, self).__init__(
             resistance=resistance,
             rotate_speed=rotate_speed,
             thrust=thrust,
         )
+        self.live = live
+        self.damage = 0
+
+    def add_damage(self, value):
+        self.damage += value
 
     def process_live(self):
-        #self.max_live -= math.sqrt(self.dx ** 2 + self.dy ** 2)
-        pass
+        self.live -= self.damage
+        self.damage = 0
 
     def update(self, dt):
         #self.rotation += self.rotate_speed * dt
@@ -83,20 +87,25 @@ class AsteroidMechanics(BaseMechanics):
         self.da = self.rotate_speed * dt
 
     def is_live(self):
-        return self.max_live > 0
+        return self.live > 0
 
 class BulletMechanics(BaseMechanics):
-    def __init__(self, resistance, rotate_speed, thrust):
+    def __init__(self, resistance, rotate_speed, thrust, energy=700):
         super(BulletMechanics, self).__init__(
             resistance=resistance,
             rotate_speed=rotate_speed,
             thrust=thrust,
-            max_live=700
         )
+        self.boom = False
+        self.energy = energy
         self.key_handler = key.KeyStateHandler()
 
+    def destroy(self):
+        self.boom = True
+        self.energy = -1
+
     def process_live(self):
-        self.max_live -= math.sqrt(self.dx ** 2 + self.dy ** 2)
+        self.energy -= math.sqrt(self.dx ** 2 + self.dy ** 2)
 
     def update(self, dt):
         angle_radians = -math.radians(self.rotation)
@@ -106,18 +115,32 @@ class BulletMechanics(BaseMechanics):
         self.dy = self.velocity_y * dt
 
     def is_live(self):
-        return self.max_live > 0
+        return self.energy > 0
 
 class ShipMechanics(BaseMechanics):
 
-    def __init__(self, resistance, rotate_speed, thrust):
+    def __init__(self, resistance, rotate_speed, thrust, live=1000):
         super(ShipMechanics, self).__init__(
             resistance=resistance,
             rotate_speed=rotate_speed,
             thrust=thrust,
-            max_live=700
         )
+        self.starting_live = live
+
+        self.live = live
         self.key_handler = key.KeyStateHandler()
+        self.damage = 0
+
+    def reset(self):
+        self.live = self.starting_live
+        self.damage = 0
+
+    def add_damage(self, value):
+        self.damage += value
+
+    def process_live(self):
+        self.live -= self.damage
+        self.damage = 0
 
     def update(self, dt):
 
@@ -146,4 +169,4 @@ class ShipMechanics(BaseMechanics):
         self.da = self.velocity_angle
 
     def is_live(self):
-        return True
+        return self.live > 0

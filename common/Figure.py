@@ -31,20 +31,29 @@ class Mode(Enum):
 
 
 class Figure(object):
-    def __init__(self, cx=0, cy=0, width=0, height=0, slide_x=0, slide_y=0, num_segments=0, mode=Mode.Line, points=None, color=Color.White):
-        # self._cpoint = Point(0,0)
+    def __init__(self,
+                 cx=0, cy=0, width=0, height=0,
+                 slide_x=0, slide_y=0, rotation=0.0,
+                 num_segments=0, mode=Mode.Line,
+                 points=None, color=Color.White):
         self._mode = mode
         self._points = points
         self._color = color
         self._width = width
         self._height = height
         self._num_segments = num_segments
+        self._rotation = rotation
 
         self._slide_x = slide_x
         self._slide_y = slide_y
 
         self.cx = cx
         self.cy = cy
+
+    def _set_rotation(self, rotation):
+        self._rotation = rotation
+
+    rotation = property(lambda self: self._rotation, _set_rotation)
 
     def _set_num_segments(self, num_segments):
         self._num_segments = num_segments
@@ -125,25 +134,37 @@ class Figure(object):
         raise Exception("Function needs realising")
 
 
+
 class Circle(Figure):
-    def __init__(self, radius, *args, **kwargs):
+    def __init__(self, radius, num_segments=100, *args, **kwargs):
         super(Circle, self).__init__(
             mode=Mode.Circle,
             points=[],
             width=radius,
             height=radius,
-            num_segments=100,
+            num_segments=num_segments,
             *args, **kwargs)
         self._radius = radius
         self.make()
 
-    def get_center(self, rotation):
-        r = -math.radians(rotation)
-        cr = math.cos(r)
-        sr = math.sin(r)
-        return Point(
-            ( self.cx ) * cr - ( self.cy ) * sr,
-            ( self.cx ) * sr + ( self.cy ) * cr)
+    def left(self):
+        return self.cx - self.radius
+
+    def right(self):
+        return self.cx + self.radius
+
+    def top(self):
+        return self.cy + self.radius
+
+    def bottom(self):
+        return self.cy - self.radius
+
+    def contains(self, x, y):
+        length = math.sqrt((self.cx - x) ** 2 + (self.cy - y) ** 2)
+        return length < self.radius
+
+    def get_center(self):
+        return Point(self.cx, self.cy)
 
     def _get_radius(self):
         return self._radius
@@ -155,7 +176,7 @@ class Circle(Figure):
 
     def make(self, rotation=0, x=0, y=0):
         self.points[:] = []
-        cpoint = self.get_center(rotation)
+        cpoint = self.get_center()
         dx = cpoint.x + x
         dy = cpoint.y + y
         for ii in range(self.num_segments):
@@ -201,6 +222,34 @@ class Rectangle(Figure):
         ]
         self.make()
 
+    def left(self):
+        x = self.points[0].x
+        for point in self.points:
+            x = min(point.x, x)
+        return x
+
+    def right(self):
+        x = self.points[0].x
+        for point in self.points:
+            x = max(point.x, x)
+        return x
+
+    def top(self):
+        y = self.points[0].y
+        for point in self.points:
+            y = max(point.y, y)
+        return y
+
+    def bottom(self):
+        y = self.points[0].y
+        for point in self.points:
+            y = min(point.y, y)
+        return y
+
+    def contains(self, x, y):
+        return (self.left() <= x <= self.right() and
+                self.bottom() <= y <= self.top() )
+
     def make(self):
         self.points[:] = []
         for vec in self.vec2d:
@@ -210,11 +259,6 @@ class Rectangle(Figure):
             dx = vec.x * cr - vec.y * sr + self.cx
             dy = vec.x * sr + vec.y * cr + self.cy
             self.points.append(Point(dx, dy))
-
-    def _set_rotation(self, rotation):
-        self._rotation = rotation
-
-    rotation = property(lambda self: self._rotation, _set_rotation)
 
     def rotate(self, theta):
         delta = self.rotation - theta

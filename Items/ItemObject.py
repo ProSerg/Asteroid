@@ -1,6 +1,7 @@
 import pyglet, math
 from Asteroid.common.Point import Point
 
+# TODO MAX SPEED
 class ItemObject(object):
 
     _sprite = None
@@ -23,7 +24,7 @@ class ItemObject(object):
         self._name = name
         self._x = x
         self._y = y
-        self.live = True
+        self._live = True
         self._local_x = local_x
         self._local_y = local_y
         self._local_point = Point(local_x, local_y)
@@ -47,7 +48,15 @@ class ItemObject(object):
     def _set_name(self, name):
         self._name = name
 
-    static = property(_get_name, _set_name, doc="""FIXME""")
+    name = property(_get_name, _set_name, doc="""FIXME""")
+
+    def _get_live(self):
+        return self._live
+
+    def _set_live(self, live):
+        self._live = live
+
+    live = property(_get_live, _set_live, doc="""FIXME""")
 
     def _get_static(self):
         return self._static
@@ -147,6 +156,13 @@ class ItemObject(object):
 
     sprite = property(_get_sprite, _set_sprite, doc="""FIXME""")
 
+    def visible(self, flag):
+        self.sprite.visible = flag
+        for child in self.childs():
+            child.sprite.visible = flag
+
+    def getVisible(self):
+        return self.sprite.visible
 
     def draw(self):
         """
@@ -154,6 +170,7 @@ class ItemObject(object):
         :return:
         """
         try:
+            # self.sprite.draw() не нужно рисовать поскольку есть batch
             self.bounds.draw()
         except Exception as ex:
             #print(self.bounds)
@@ -313,6 +330,9 @@ class ItemObject(object):
 
     def childs(self):
         return self._childs
+
+    def reset(self):
+        self.mechanic.reset()
 
     def destroy(self):
         for child in self.childs():
