@@ -74,7 +74,6 @@ class GameMaster(object):
         return self.anim_manager.createAnimation(name, x, y, rotation, group=group)
 
     def make_asteroid(self, name,  x, y, rotation, rotate_speed, thrust, type=TypeAsteroid.MEDIUM):
-        print("Type Asteroid: {} {}".format(type, TypeAsteroid.MEDIUM))
         if TypeAsteroid.MEDIUM.value == type.value:
             asteroid_sprite = self.unit_manager.get_sprite(
                 name="asteroid_brown.png",
@@ -103,6 +102,7 @@ class GameMaster(object):
         asteroid_mechanics = AsteroidMechanics(
             resistance=0.0,
             thrust=thrust,
+            typeAsteroid=type,
             rotate_speed=rotate_speed,
             live=live,
         )
@@ -140,6 +140,8 @@ class GameMaster(object):
             resistance=self.resistance,
             thrust=thrust,
             rotate_speed=rotate_speed,
+            live=1000,
+            magazine=7,
         )
 
         ship = ItemObject(
@@ -181,7 +183,7 @@ class GameMaster(object):
         ship.add(engine2)
         return ship
 
-    def make_bullet(self, x, y, rotation, power):
+    def make_bullet(self, x, y, rotation, energy):
         bullet_sprite = self.unit_manager.get_sprite(
             name="bullet.png",
             scale=0.3,
@@ -193,7 +195,7 @@ class GameMaster(object):
             resistance=0.0,
             thrust=500,
             rotate_speed=2.0,
-            energy=700,
+            energy=energy,
             damage=200,
         )
         bounds = Circle(
@@ -211,7 +213,5 @@ class GameMaster(object):
             mechanic=bullet_mechanics,
             bounds=bounds,
         )
-
-        bullet.power = power
 
         return bullet

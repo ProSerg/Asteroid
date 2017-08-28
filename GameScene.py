@@ -64,6 +64,10 @@ class GameScene(pyglet.window.Window):
         self._start_ship_position = Point(400, 350)
 
 
+        ## USER SETTINGS
+        self._score = 0
+        self._bonus = 0
+
     def checkForCollision(self, obj1, obj2):
         # if (obj1.x < obj2.x + obj2.width) \
         #         and (obj2.x < obj1.x + obj1.width) \
@@ -76,7 +80,7 @@ class GameScene(pyglet.window.Window):
     def generate_scene(self):
         self.user_ship = self.master.make_user_ship(
             x=self._start_ship_position.x, y=self._start_ship_position.y,
-            rotation=-45, rotate_speed=220, thrust=240)
+            rotation=-45, rotate_speed=220, thrust=400)
         self.push_handlers(self.user_ship.mechanic.key_handler)
         self.user_ship.visible(False)
 
@@ -117,14 +121,14 @@ class GameScene(pyglet.window.Window):
 
     def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.W:
-            self.shoot = True
             if self.user_ship.getVisible() is True:
-                bullet = self.master.make_bullet(
-                    x=self.user_ship.x,
-                    y=self.user_ship.y,
-                    rotation=self.user_ship.rotation,
-                    power=100)
-                self.add_bullet(bullet)
+                if self.user_ship.mechanic.shoot() is True:
+                    bullet = self.master.make_bullet(
+                        x=self.user_ship.x,
+                        y=self.user_ship.y,
+                        rotation=self.user_ship.rotation,
+                        energy=500)
+                    self.add_bullet(bullet)
         elif symbol == pyglet.window.key.SPACE:
             self.usePortal()
         elif symbol == pyglet.window.key.R:
@@ -134,7 +138,7 @@ class GameScene(pyglet.window.Window):
 
     def on_key_release(self, symbol, modifiers):
         if symbol == pyglet.window.key.W:
-            self.shoot = False
+            pass
 
     def on_draw(self):
         self.clear()
@@ -257,7 +261,7 @@ class GameScene(pyglet.window.Window):
         #     for j in range(i + 1, len(objects)):
         #         self.check_collision(objects[i], objects[j])
         flag = False
-        for obj in objects:
+        for obj in objects.copy():
             if obj.name.find("Asteroid") != -1:
                 if self.check_collision(self.user_ship, obj) is True:
                     # flag = True
@@ -267,11 +271,11 @@ class GameScene(pyglet.window.Window):
                     #self.items.pop(self.items.index(self.user_ship))
                     # self.user_ship.visible = False
                     # self.user_ship.live = False
+                    print("Damage:!!")
                     self.user_ship.mechanic.add_damage(value=300)
                 for bullet in self.bullets:
                     if self.check_hit(bullet, obj) is True:
                         # obj.bounds.color = Color.Red
-                        print("Pos: ", obj.x, obj.y)
                         obj.mechanic.add_damage(value=bullet.mechanic.damage)
                         bullet.mechanic.destroy()
 
@@ -295,18 +299,48 @@ class GameScene(pyglet.window.Window):
                     self.master.play(
                         "asteroid_boom",
                         obj.sprite.x, obj.sprite.y, group=self.loader.effects)
+                    typeAsteroid = obj.mechanic.typeAsteroid.value
+                    if TypeAsteroid.MEDIUM.value == typeAsteroid:
+                        for idx in range(0, 3):
+                            asteroid = self.master.make_asteroid(
+                                name="Asteroid",
+                                x=obj.sprite.x,
+                                y=obj.sprite.y,
+                                rotation=random.randint(0, 360),
+                                rotate_speed=obj.mechanic.rotate_speed - int(obj.mechanic.rotate_speed*0.1),
+                                thrust=obj.mechanic.thrust - int( obj.mechanic.thrust*0.1),
+                                type=TypeAsteroid.SMALL)
+                            self.add_item(asteroid)
+                            self._bonus = 5
+                    elif TypeAsteroid.BIG.value == typeAsteroid:
+                        for idx in range(0, 5):
+                            asteroid = self.master.make_asteroid(
+                                name="Asteroid",
+                                x=obj.sprite.x,
+                                y=obj.sprite.y,
+                                rotation=random.randint(0, 360),
+                                rotate_speed=obj.mechanic.rotate_speed - int(obj.mechanic.rotate_speed*0.1),
+                                thrust=obj.mechanic.thrust - int(obj.mechanic.thrust*0.1),
+                                type=TypeAsteroid.SMALL)
+                            self.add_item(asteroid)
+                            self._bonus = 10
+                    else:
+                        self._bonus = 0
+
+                    self.del_item(obj)
                     obj.destroy()
-                    objects.remove(obj)
                     del obj
                     obj = None
+
+                    self._score += 1 + self._bonus
             else:
                 self.user_ship.process()
                 if self.user_ship.live is False:
+                    self.user_ship.visible(False)
                     self.master.play(
                         "ship_boom",
-                        self.user_ship.sprite.x, self.user_ship.sprite.y,group=self.loader.effects)
-                    objects.remove(self.user_ship)
-                    self.user_ship.visible(False)
+                        self.user_ship.sprite.x, self.user_ship.sprite.y, group=self.loader.effects)
+                    self.del_item(self.user_ship)
 
         for obj in self.bullets:
             obj.process()
@@ -319,11 +353,17 @@ class GameScene(pyglet.window.Window):
                 del obj
                 obj = None
 
+    def processing_environment(self):
+        self.master.user_ui.update_score(self._score)
+        self.master.user_ui.update_ammo(self.user_ship.mechanic.getAmmo())
+        self.master.user_ui.update_energy(self.user_ship.mechanic.getEnergy())
+
 
     def update(self, _dt):
         self.processing_collisions()
         self.moving(_dt)
         self.processing_objects()
+        self.processing_environment()
 
 
     def clear_wave(self):
@@ -339,10 +379,9 @@ class GameScene(pyglet.window.Window):
                 y=random.randint(700, 750),
                 rotation=random.randint(0, 360),
                 rotate_speed=random.randint(-200, 200),
-                thrust=random.randint(50, 450),
+                thrust=random.randint(50, 300),
                 type=random.choice([TypeAsteroid.BIG, TypeAsteroid.MEDIUM, TypeAsteroid.SMALL]))
             self.add_item(asteroid)
-            print("asteroid: ", asteroid.x, asteroid.y)
 
 
     def arrivalShip(self):

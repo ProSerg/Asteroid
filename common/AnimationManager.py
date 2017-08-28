@@ -24,8 +24,26 @@ class AnimationSprite(pyglet.sprite.Sprite):
         if self._looped is True:
             self._animation_ended = True
         else:
-            self._calldelete(self)
+            if self._calldelete:
+                self._calldelete(self)
             self.delete()
+
+    def move(self, dx=0, dy=0, da=0.0 ):
+        """
+        переместить объект на значения.
+        :param dx:
+        :param dy:
+        :param da:
+        :return:
+        """
+        self.x += dx
+        self.y += dy
+
+    def turn(self, theata, dt):
+        pass
+
+    def destoy(self):
+        pass
 
 
 class AnimationManager(object):
@@ -113,6 +131,15 @@ class AnimationManager(object):
         # animation.set_position(x - animation.width/2, y - animation.height/2)
         animation.set_position(x - animation.width/2, y - animation.height/2)
         self._animations.append(animation)
+
+    def createAnimation(self, name,  x=0, y=0, rotation=0, looped=False, group=None):
+        animation = AnimationSprite(self._buffer_springs_effects.get(name).get("frames"),
+                                    scale=self._buffer_springs_effects.get(name).get("scale"),
+                                    looped=looped, calldelete=None, rotation=rotation,
+                                    batch=self._batch, group=group)
+        # animation.set_position(x - animation.width/2, y - animation.height/2)
+        animation.set_position(x - animation.width/2, y - animation.height/2)
+        return animation
 
     def getAnimation(self, name,  x=0, y=0):
         animation = self._buffer_springs_effects.get(name)

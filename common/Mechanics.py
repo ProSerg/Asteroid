@@ -61,7 +61,7 @@ class BaseMechanics(object):
 
 
 class AsteroidMechanics(BaseMechanics):
-    def __init__(self, resistance, rotate_speed, thrust, live=500):
+    def __init__(self, resistance, rotate_speed, typeAsteroid, thrust, live=500):
         super(AsteroidMechanics, self).__init__(
             resistance=resistance,
             rotate_speed=rotate_speed,
@@ -69,6 +69,7 @@ class AsteroidMechanics(BaseMechanics):
         )
         self.live = live
         self.damage = 0
+        self.typeAsteroid = typeAsteroid
 
     def add_damage(self, value):
         self.damage += value
@@ -120,47 +121,100 @@ class BulletMechanics(BaseMechanics):
 
 class ShipMechanics(BaseMechanics):
 
-    def __init__(self, resistance, rotate_speed, thrust, live=1000):
+    def __init__(self, resistance, rotate_speed, thrust,  magazine=3, live=1000):
         super(ShipMechanics, self).__init__(
             resistance=resistance,
             rotate_speed=rotate_speed,
             thrust=thrust,
         )
+        self.magazine = magazine
+        self.charge = self.magazine
         self.starting_live = live
-
+        self._cost_bullet = 1.0
+        self._reload_power = 1.8
+        self._reload_energy = 12.0
+        self._cost_energy = 40.0
         self.live = live
         self.key_handler = key.KeyStateHandler()
         self.damage = 0
+        self.max_energy = 400
+        self.energy = self.max_energy
+        self._moving = False
+
+    def getAmmo(self):
+        ammo = (self.charge/self.magazine) * 100
+        if ammo > 100:
+            ammo = 100
+        return int(ammo)
+
+    def getLive(self):
+        live = (self.live / float(self.starting_live)) * 100
+        if live > 100:
+            live = 100
+        return int(live)
+
+    def getEnergy(self):
+        energy = (self.energy / float(self.max_energy))
+        if energy > 1.0:
+            energy = 1.0
+        return energy
 
     def reset(self):
         self.live = self.starting_live
+        self.charge = self.magazine
+        # self.energy = self.max_energy
         self.damage = 0
+        self.velocity_x = 0
+        self.velocity_y = 0
+        self.velocity_angle = 0
 
     def add_damage(self, value):
         self.damage += value
+
+    def expens_energy(self, value):
+        self.energy -= value
+
+    def shoot(self):
+        if self.charge > self._cost_bullet:
+            self.charge -= self._cost_bullet
+            return True
+        return False
 
     def process_live(self):
         self.live -= self.damage
         self.damage = 0
 
     def update(self, dt):
-
-        if self.key_handler[key.LEFT]:
-            self.velocity_angle = -self.rotate_speed * dt
-        elif self.key_handler[key.RIGHT]:
-            self.velocity_angle = self.rotate_speed * dt
-        else:
-            self.velocity_angle = 0
+        force_x = 0
+        force_y = 0
+        if self.energy > 0:
+            if self.key_handler[key.LEFT]:
+                if self.energy < self._cost_energy:
+                    self.velocity_angle = -self.rotate_speed * dt * 0.5
+                else:
+                    self.velocity_angle = -self.rotate_speed * dt
+                # self.expens_energy(dt*self._cost_energy*0.2)
+            elif self.key_handler[key.RIGHT]:
+                if self.energy < self._cost_energy :
+                    self.velocity_angle = self.rotate_speed * dt * 0.5
+                else:
+                    self.velocity_angle = self.rotate_speed * dt
+                # self.expens_energy(dt*self._cost_energy*0.2)
+            else:
+                self.velocity_angle = 0
 
         self.rotation += self.velocity_angle
 
         angle_radians = -math.radians(self.rotation)
 
-        if self.key_handler[key.UP]:
-            force_x = math.cos(angle_radians) * self.thrust * dt
-            force_y = math.sin(angle_radians) * self.thrust * dt
-            self.velocity_x += force_x
-            self.velocity_y += force_y
+        if self.energy > 0:
+            if self.key_handler[key.UP]:
+                force_x = math.cos(angle_radians) * self.thrust * dt
+                force_y = math.sin(angle_radians) * self.thrust * dt
+                self.velocity_x += force_x
+                self.velocity_y += force_y
+                self.expens_energy(dt*self._cost_energy)
+
 
         self.velocity_x -= self.velocity_x * self.resistance
         self.velocity_y -= self.velocity_y * self.resistance
@@ -168,6 +222,17 @@ class ShipMechanics(BaseMechanics):
         self.dx = self.velocity_x * dt
         self.dy = self.velocity_y * dt
         self.da = self.velocity_angle
+
+
+        if self.velocity_angle == 0 or force_x == 0 or force_y == 0:
+            if self.energy < self.max_energy:
+                self.energy += dt * self._reload_energy
+
+        self.reload(dt)
+
+    def reload(self, dt):
+        if self.charge < self.magazine:
+            self.charge += dt * self._reload_power
 
     def is_live(self):
         return self.live > 0
