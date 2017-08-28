@@ -281,14 +281,14 @@ class ItemObject(object):
                 self.bounds.rotation -= 360
             self.bounds.make()
 
-    def process(self):
+    def process(self, dt=0):
         """
         производим действия над объектом как резудльтат
         событий в игровом мире : столкнавения, попадания и др.
         :return:
         """
         if self.mechanic:
-            self.mechanic.process_live()
+            self.mechanic.process_live(dt)
             self.live = self.mechanic.is_live()
 
 

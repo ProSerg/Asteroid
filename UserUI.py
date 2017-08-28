@@ -4,13 +4,22 @@ import pyglet
 
 class UserUI(object):
 
-    def __init__(self, batch, *args, **kwargs):
+    def __init__(self, unit_manager, group, batch, *args, **kwargs):
         self._batch = batch
+
+        self.ship = unit_manager.get_sprite(
+            name="player_ship.png",
+            scale=0.05,
+            rotation=0,
+            group=group,
+        )
+
         self._score = pyglet.text.Label(
             text='Score: 0',
             x=50, y=575,
             anchor_x='center',
             batch=self._batch)
+
         self._ammo = pyglet.text.Label(
             text='Ammo: 100 %',
             x=20, y=30,
@@ -22,6 +31,15 @@ class UserUI(object):
             x=600, y=30,
             anchor_x='left',
             batch=self._batch)
+
+        self._live = pyglet.text.Label(
+            text='x 0',
+            x=750, y=570,
+            anchor_x='left',
+            batch=self._batch)
+
+        self.ship.x = 730
+        self.ship.y = 578
 
         # self._armor = pyglet.text.Label(
         #     text='Armor: 100 %',
@@ -55,7 +73,6 @@ class UserUI(object):
         """
         percent = ("{0:." + str(decimals) + "f}").format(100 * procent)
         filledLength = int(length*procent)
-        print(length - filledLength)
         bar = fill * filledLength + '  ' * (length - filledLength)
         # print(
         text = '%s |%s|' % (prefix, bar)
@@ -68,10 +85,9 @@ class UserUI(object):
     def update_ammo(self, value):
         self._ammo.text = ' Ammo:  {} %'.format(value)
 
-    # def update_armor(self, value):
-    #     self._armor.text = ' Armor:  {} %'.format(value)
+    def update_live(self, value):
+         self._live.text = 'x {}'.format(value)
 
     def update_energy(self, value):
-        print(value)
         self._energy.text = self.textProgress(procent=value)
 

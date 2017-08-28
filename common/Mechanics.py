@@ -48,7 +48,7 @@ class BaseMechanics(object):
 
     rotation = property(_get_rotation, _set_rotation)
 
-    def process_live(self):
+    def process_live(self, dt):
         pass
 
     def update(self, dt):
@@ -74,7 +74,7 @@ class AsteroidMechanics(BaseMechanics):
     def add_damage(self, value):
         self.damage += value
 
-    def process_live(self):
+    def process_live(self, dt):
         self.live -= self.damage
         self.damage = 0
 
@@ -106,7 +106,7 @@ class BulletMechanics(BaseMechanics):
         self.boom = True
         self.energy = -1
 
-    def process_live(self):
+    def process_live(self, dt):
         self.energy -= math.sqrt(self.dx ** 2 + self.dy ** 2)
 
     def update(self, dt):
@@ -118,6 +118,32 @@ class BulletMechanics(BaseMechanics):
 
     def is_live(self):
         return self.energy > 0
+
+class StarMechanics(BaseMechanics):
+    def __init__(self, cost, time):
+        super(StarMechanics, self).__init__(
+            resistance=0,
+            rotate_speed=0,
+            thrust=0,
+        )
+        self.cost = cost
+        self.time = time
+        self.ctime = 0
+        self.live = True
+        self.boom = False
+
+    def destroy(self):
+        self.live = False
+
+    def process_live(self, dt):
+        if self.ctime > self.time:
+            self.live = False
+            self.boom = True
+        else:
+            self.ctime += dt
+
+    def is_live(self):
+        return self.live
 
 class ShipMechanics(BaseMechanics):
 
@@ -180,7 +206,7 @@ class ShipMechanics(BaseMechanics):
             return True
         return False
 
-    def process_live(self):
+    def process_live(self, dt):
         self.live -= self.damage
         self.damage = 0
 

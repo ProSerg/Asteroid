@@ -129,6 +129,7 @@ class AnimationManager(object):
                                     looped=looped, calldelete=self.deleteAnimation, rotation=rotation,
                                     batch=self._batch, group=group)
         # animation.set_position(x - animation.width/2, y - animation.height/2)
+        # animation.set_position(x - animation.width/2, y - animation.height/2)
         animation.set_position(x - animation.width/2, y - animation.height/2)
         self._animations.append(animation)
 

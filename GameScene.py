@@ -46,6 +46,7 @@ class GameScene(pyglet.window.Window):
         self.interface = []
         self.items = set()
         self.bullets = []
+        self.stars = []
         self.batches = {}
         self.sprites = []
         self._curr_batch = None
@@ -67,6 +68,10 @@ class GameScene(pyglet.window.Window):
         ## USER SETTINGS
         self._score = 0
         self._bonus = 0
+        self._ships = 4
+
+        # star = self.master.make_star(100,100,None,100,10)
+        # self.stars.append(star)
 
     def checkForCollision(self, obj1, obj2):
         # if (obj1.x < obj2.x + obj2.width) \
@@ -271,7 +276,6 @@ class GameScene(pyglet.window.Window):
                     #self.items.pop(self.items.index(self.user_ship))
                     # self.user_ship.visible = False
                     # self.user_ship.live = False
-                    print("Damage:!!")
                     self.user_ship.mechanic.add_damage(value=300)
                 for bullet in self.bullets:
                     if self.check_hit(bullet, obj) is True:
@@ -279,13 +283,18 @@ class GameScene(pyglet.window.Window):
                         obj.mechanic.add_damage(value=bullet.mechanic.damage)
                         bullet.mechanic.destroy()
 
+        for star in self.stars:
+            if self.check_collision(self.user_ship, star) is True:
+                self._score += star.cost
+                star.mechanic.destroy()
+
         if flag is True:
             self.user_ship.bounds.color = Color.Red
         else:
             self.user_ship.bounds.color = Color.Green
 
 
-    def processing_objects(self):
+    def processing_objects(self, dt):
         '''
         Обработчик объектов. Проверяет состояние параметров. Например, проверяет если у объекта закончились жизни, то
         уничтожает. Или получил повреждения, то вычитает.
@@ -294,7 +303,7 @@ class GameScene(pyglet.window.Window):
         objects = self._get_objects()
         for obj in objects.copy():
             if obj.name.find("Asteroid") > -1:
-                obj.process()
+                obj.process(dt)
                 if obj.live is False:
                     self.master.play(
                         "asteroid_boom",
@@ -311,7 +320,7 @@ class GameScene(pyglet.window.Window):
                                 thrust=obj.mechanic.thrust - int( obj.mechanic.thrust*0.1),
                                 type=TypeAsteroid.SMALL)
                             self.add_item(asteroid)
-                            self._bonus = 5
+
                     elif TypeAsteroid.BIG.value == typeAsteroid:
                         for idx in range(0, 5):
                             asteroid = self.master.make_asteroid(
@@ -323,18 +332,18 @@ class GameScene(pyglet.window.Window):
                                 thrust=obj.mechanic.thrust - int(obj.mechanic.thrust*0.1),
                                 type=TypeAsteroid.SMALL)
                             self.add_item(asteroid)
-                            self._bonus = 10
+
                     else:
-                        self._bonus = 0
+                        pass
+
+                    self.stars.append(self.master.make_star(obj.sprite.x, obj.sprite.y, obj.mechanic.typeAsteroid, 7))
 
                     self.del_item(obj)
                     obj.destroy()
                     del obj
                     obj = None
-
-                    self._score += 1 + self._bonus
             else:
-                self.user_ship.process()
+                self.user_ship.process(dt)
                 if self.user_ship.live is False:
                     self.user_ship.visible(False)
                     self.master.play(
@@ -343,7 +352,7 @@ class GameScene(pyglet.window.Window):
                     self.del_item(self.user_ship)
 
         for obj in self.bullets:
-            obj.process()
+            obj.process(dt)
             if obj.live is False:
                 if obj.mechanic.boom is True:
                     self.master.play(
@@ -353,16 +362,29 @@ class GameScene(pyglet.window.Window):
                 del obj
                 obj = None
 
+        for star in self.stars:
+            star.process(dt)
+            if star.live is False:
+                if star.mechanic.boom is True:
+                    self.master.play(
+                        "star_boom",
+                        star.sprite.x + 25, star.sprite.y + 25, group=self.loader.effects)
+                self.stars.remove(star)
+                star.destroy()
+                del star
+                star = None
+
     def processing_environment(self):
         self.master.user_ui.update_score(self._score)
         self.master.user_ui.update_ammo(self.user_ship.mechanic.getAmmo())
         self.master.user_ui.update_energy(self.user_ship.mechanic.getEnergy())
+        self.master.user_ui.update_live(self._ships)
 
 
-    def update(self, _dt):
+    def update(self, dt):
         self.processing_collisions()
-        self.moving(_dt)
-        self.processing_objects()
+        self.moving(dt)
+        self.processing_objects(dt)
         self.processing_environment()
 
 
@@ -393,25 +415,27 @@ class GameScene(pyglet.window.Window):
         )
         self.user_ship.visible(True)
         self.add_item(self.user_ship)
+        self._ships -= 1
 
     def leavingShip(self):
         self.master.play(
             "portal", self.user_ship.sprite.x, self.user_ship.sprite.y, group=self.loader.background)
         self.user_ship.visible(False)
         self.del_item(self.user_ship)
+        self._ships += 1
 
     def usePortal(self):
         if self.user_ship.getVisible() is True and self.user_ship.live is True:
             self.leavingShip()
-        elif self.user_ship.live is False:
-            self.restart()
-        else:
-            self.arrivalShip()
+        elif self._ships > 0:
+            if self.user_ship.live is False:
+                self.restart()
+            else:
+                self.arrivalShip()
 
     def restart(self):
         self.user_ship.reset()
         self.arrivalShip()
-        self.add_item(self.user_ship)
 
 if __name__ == "__main__":
     game = GameScene(800, 600)
