@@ -75,7 +75,6 @@ class GameScene(pyglet.window.Window):
             rotation=-45, rotate_speed=220, thrust=240)
         self.push_handlers(self.user_ship.mechanic.key_handler)
         self.user_ship.visible(False)
-        self.add_item(self.user_ship)
 
 
     def create_batch(self, name, status=True):
@@ -100,6 +99,9 @@ class GameScene(pyglet.window.Window):
     def add_interface(self, item):
         self.interface.append(item)
 
+    def del_item(self, item):
+        self.items.remove(item)
+
     def add_item(self, item):
         self.items.add(item)
 
@@ -112,7 +114,7 @@ class GameScene(pyglet.window.Window):
     def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.W:
             self.shoot = True
-            if self.user_ship.live is True:
+            if self.user_ship.getVisible() is True:
                 bullet = self.master.make_bullet(
                     x=self.user_ship.x,
                     y=self.user_ship.y,
@@ -330,8 +332,8 @@ class GameScene(pyglet.window.Window):
             asteroid = self.master.make_asteroid(
                 name="Asteroid_{}".format(num),
                 x=random.randint(50, 800),
-                y=random.randint(600, 650),
-                rotation=random.randint(0, 180),
+                y=random.randint(700, 750),
+                rotation=random.randint(0, 360),
                 rotate_speed=random.randint(-200, 200),
                 thrust=random.randint(50, 450))
             self.add_item(asteroid)
@@ -346,11 +348,13 @@ class GameScene(pyglet.window.Window):
             y=self._start_ship_position.y,
         )
         self.user_ship.visible(True)
+        self.add_item(self.user_ship)
 
     def leavingShip(self):
         self.master.play(
             "portal", self.user_ship.sprite.x, self.user_ship.sprite.y, group=self.loader.background)
         self.user_ship.visible(False)
+        self.del_item(self.user_ship)
 
     def usePortal(self):
         if self.user_ship.getVisible() is True and self.user_ship.live is True:

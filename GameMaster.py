@@ -66,6 +66,8 @@ class GameMaster(object):
     def play(self, name, x, y,  rotation=0, group=None): # FIXME rotation must be  eq 0 only
         self.anim_manager.playAnimation(name, x, y, rotation, group=group)
 
+    def createAnimation(self,name, x, y,  rotation=0, group=None ):
+        return self.anim_manager.createAnimation(name, x, y, rotation, group=group)
 
     def make_asteroid(self, name, x , y, rotation, rotate_speed, thrust ):
         asteroid_sprite = self.unit_manager.get_sprite(
