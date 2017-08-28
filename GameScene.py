@@ -11,8 +11,11 @@ from pathlib import Path
 from Asteroid.common.Resources import *
 from Asteroid.common.Figure import *
 from Asteroid.common.Mechanics import *
-from Asteroid.GameMaster import GameMaster
+from Asteroid.GameMaster import *
 import random
+
+from GameMaster import TypeAsteroid
+
 
 class BatchOp(object):
     def __init__(self, name, status=True):
@@ -32,6 +35,7 @@ class GameScene(pyglet.window.Window):
         "".join((path_to_resource, "/Effects/Proton Star")),
         "".join((path_to_resource, "/Effects/Red Explosion")),
         "".join((path_to_resource, "/Effects/Fires")),
+        "".join((path_to_resource, "/Asteroids")),
     ]
 
     def __init__(self, width, height, DEBUG_MOD=False):
@@ -268,8 +272,8 @@ class GameScene(pyglet.window.Window):
                     if self.check_hit(bullet, obj) is True:
                         # obj.bounds.color = Color.Red
                         print("Pos: ", obj.x, obj.y)
+                        obj.mechanic.add_damage(value=bullet.mechanic.damage)
                         bullet.mechanic.destroy()
-                        obj.mechanic.add_damage(value=300)
 
         if flag is True:
             self.user_ship.bounds.color = Color.Red
@@ -335,7 +339,8 @@ class GameScene(pyglet.window.Window):
                 y=random.randint(700, 750),
                 rotation=random.randint(0, 360),
                 rotate_speed=random.randint(-200, 200),
-                thrust=random.randint(50, 450))
+                thrust=random.randint(50, 450),
+                type=random.choice([TypeAsteroid.BIG, TypeAsteroid.MEDIUM, TypeAsteroid.SMALL]))
             self.add_item(asteroid)
             print("asteroid: ", asteroid.x, asteroid.y)
 

@@ -90,7 +90,7 @@ class AsteroidMechanics(BaseMechanics):
         return self.live > 0
 
 class BulletMechanics(BaseMechanics):
-    def __init__(self, resistance, rotate_speed, thrust, energy=700):
+    def __init__(self, resistance, rotate_speed, thrust, energy=700, damage=200):
         super(BulletMechanics, self).__init__(
             resistance=resistance,
             rotate_speed=rotate_speed,
@@ -98,6 +98,7 @@ class BulletMechanics(BaseMechanics):
         )
         self.boom = False
         self.energy = energy
+        self.damage = damage
         self.key_handler = key.KeyStateHandler()
 
     def destroy(self):

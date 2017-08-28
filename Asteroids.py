@@ -4,7 +4,7 @@ from Asteroid.GameScene import *
 
 
 def init_world():
-    DEBUG_MOD = False
+    DEBUG_MOD = True
     game_scene = GameScene(width=800, height=600, DEBUG_MOD=DEBUG_MOD)
     game_scene.generate_scene()
 

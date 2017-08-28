@@ -5,10 +5,14 @@ from Asteroid.common.Mechanics import *
 from Asteroid.common.Collisions import *
 from Asteroid.common.UnitManager import *
 from Asteroid.common.AnimationManager import *
-
+import random
 from pathlib import Path
 # Set up a window
 
+class TypeAsteroid(Enum):
+    BIG = 0
+    MEDIUM = 1
+    SMALL = 2
 
 class GameMaster(object):
     NUMS_ASTEROIDS = 10
@@ -69,18 +73,38 @@ class GameMaster(object):
     def createAnimation(self,name, x, y,  rotation=0, group=None ):
         return self.anim_manager.createAnimation(name, x, y, rotation, group=group)
 
-    def make_asteroid(self, name, x , y, rotation, rotate_speed, thrust ):
-        asteroid_sprite = self.unit_manager.get_sprite(
-            name="asteroid_brown.png",
-            scale=0.1,
-            rotation=90,
-            group=self._loader.asteroids_group,
-        )
+    def make_asteroid(self, name,  x, y, rotation, rotate_speed, thrust, type=TypeAsteroid.MEDIUM):
+        print("Type Asteroid: {} {}".format(type, TypeAsteroid.MEDIUM))
+        if TypeAsteroid.MEDIUM.value == type.value:
+            asteroid_sprite = self.unit_manager.get_sprite(
+                name="asteroid_brown.png",
+                scale=0.1,
+                rotation=90,
+                group=self._loader.asteroids_group,
+            )
+            live = 600
+        elif TypeAsteroid.BIG.value == type.value:
+            asteroid_sprite = self.unit_manager.get_sprite(
+                name="asteroid_brown.png",
+                scale=0.15,
+                rotation=90,
+                group=self._loader.asteroids_group,
+            )
+            live = 1000
+        else:
+            asteroid_sprite = self.unit_manager.get_sprite(
+                name=random.choice(["asteroid_gray.png","asteroid_gray_2.png", "asteroid_dark.png"]),
+                scale=0.05,
+                rotation=90,
+                group=self._loader.asteroids_group,
+            )
+            live = 200
 
         asteroid_mechanics = AsteroidMechanics(
             resistance=0.0,
             thrust=thrust,
             rotate_speed=rotate_speed,
+            live=live,
         )
 
         asteroid = ItemObject(
@@ -170,6 +194,7 @@ class GameMaster(object):
             thrust=500,
             rotate_speed=2.0,
             energy=700,
+            damage=200,
         )
         bounds = Circle(
             radius=bullet_sprite.width / 2, color=Color.Red , num_segments=100,
