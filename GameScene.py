@@ -64,6 +64,10 @@ class GameScene(pyglet.window.Window):
         self.user_ship = None
         self._start_ship_position = Point(400, 350)
 
+        self.master.make_star(-50,-50, TypeAsteroid.MEDIUM, 1)
+        self.master.make_star(-50,-50, TypeAsteroid.BIG, 1)
+        self.master.make_star(-50,-50, TypeAsteroid.SMALL, 1)
+
 
         ## USER SETTINGS
         self._score = 0
@@ -88,6 +92,7 @@ class GameScene(pyglet.window.Window):
             rotation=-45, rotate_speed=220, thrust=400)
         self.push_handlers(self.user_ship.mechanic.key_handler)
         self.user_ship.visible(False)
+        self.arrivalShip()
 
 
     def create_batch(self, name, status=True):
@@ -139,11 +144,26 @@ class GameScene(pyglet.window.Window):
         elif symbol == pyglet.window.key.R:
             self.create_wave()
         elif symbol == pyglet.window.key.ESCAPE:
-            self.clear_wave()
+            # self.clear_wave()
+            self.restartGame()
 
     def on_key_release(self, symbol, modifiers):
         if symbol == pyglet.window.key.W:
             pass
+
+    def restartGame(self):
+        self._score = 0
+        self._bonus = 0
+        self._ships = 4
+        while self.items:
+            item = self.items.pop()
+            item.destroy()
+            del item
+
+        while self.stars:
+            bonus = self.stars.pop()
+            bonus.destroy()
+            del bonus
 
     def on_draw(self):
         self.clear()
@@ -425,13 +445,9 @@ class GameScene(pyglet.window.Window):
         self._ships += 1
 
     def usePortal(self):
-        if self.user_ship.getVisible() is True and self.user_ship.live is True:
-            self.leavingShip()
-        elif self._ships > 0:
+        if self._ships > 0:
             if self.user_ship.live is False:
                 self.restart()
-            else:
-                self.arrivalShip()
 
     def restart(self):
         self.user_ship.reset()
