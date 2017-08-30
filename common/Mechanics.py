@@ -163,7 +163,7 @@ class ShipMechanics(BaseMechanics):
         self.live = live
         self.key_handler = key.KeyStateHandler()
         self.damage = 0
-        self.max_energy = 400
+        self.max_energy = 200
         self.energy = self.max_energy
         self._moving = False
 
@@ -188,7 +188,7 @@ class ShipMechanics(BaseMechanics):
     def reset(self):
         self.live = self.starting_live
         self.charge = self.magazine
-        # self.energy = self.max_energy
+        self.energy = self.max_energy
         self.damage = 0
         self.velocity_x = 0
         self.velocity_y = 0
