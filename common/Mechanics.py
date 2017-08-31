@@ -153,13 +153,19 @@ class ShipMechanics(BaseMechanics):
             rotate_speed=rotate_speed,
             thrust=thrust,
         )
+        self._time_reload_weapon = 0
+        self._const_reload_weapon_time = 2
+
+        self._time_reload_engine = 0
+        self._const_reload_engine_time = 3
+
         self.magazine = magazine
         self.charge = self.magazine
         self.starting_live = live
         self._cost_bullet = 1.0
         self._reload_power = 1.8
-        self._reload_energy = 12.0
-        self._cost_energy = 40.0
+        self._reload_energy = 15.0
+        self._cost_energy = 30.0
         self.live = live
         self.key_handler = key.KeyStateHandler()
         self.damage = 0
@@ -203,6 +209,7 @@ class ShipMechanics(BaseMechanics):
     def shoot(self):
         if self.charge > self._cost_bullet:
             self.charge -= self._cost_bullet
+            self._time_reload_weapon = self._const_reload_weapon_time
             return True
         return False
 
@@ -213,21 +220,20 @@ class ShipMechanics(BaseMechanics):
     def update(self, dt):
         force_x = 0
         force_y = 0
-        if self.energy > 0:
-            if self.key_handler[key.LEFT]:
-                if self.energy < self._cost_energy:
-                    self.velocity_angle = -self.rotate_speed * dt * 0.5
-                else:
-                    self.velocity_angle = -self.rotate_speed * dt
-                # self.expens_energy(dt*self._cost_energy*0.2)
-            elif self.key_handler[key.RIGHT]:
-                if self.energy < self._cost_energy :
-                    self.velocity_angle = self.rotate_speed * dt * 0.5
-                else:
-                    self.velocity_angle = self.rotate_speed * dt
-                # self.expens_energy(dt*self._cost_energy*0.2)
+        if self.key_handler[key.LEFT]:
+            if self.energy < self._cost_energy:
+                self.velocity_angle = -self.rotate_speed * dt * 0.5
             else:
-                self.velocity_angle = 0
+                self.velocity_angle = -self.rotate_speed * dt
+                # self.expens_energy(dt*self._cost_energy*0.2)
+        elif self.key_handler[key.RIGHT]:
+            if self.energy < self._cost_energy :
+                self.velocity_angle = self.rotate_speed * dt * 0.5
+            else:
+                self.velocity_angle = self.rotate_speed * dt
+                # self.expens_energy(dt*self._cost_energy*0.2)
+        else:
+            self.velocity_angle = 0
 
         self.rotation += self.velocity_angle
 
@@ -240,6 +246,7 @@ class ShipMechanics(BaseMechanics):
                 self.velocity_x += force_x
                 self.velocity_y += force_y
                 self.expens_energy(dt*self._cost_energy)
+                self._time_reload_engine = self._const_reload_engine_time
 
 
         self.velocity_x -= self.velocity_x * self.resistance
@@ -250,11 +257,16 @@ class ShipMechanics(BaseMechanics):
         self.da = self.velocity_angle
 
 
-        if self.velocity_angle == 0 or force_x == 0 or force_y == 0:
+        if self._time_reload_engine < 0:
             if self.energy < self.max_energy:
                 self.energy += dt * self._reload_energy
+        else:
+            self._time_reload_engine -= dt
 
-        self.reload(dt)
+        if self._time_reload_weapon < 0:
+            self.reload(dt)
+        else:
+            self._time_reload_weapon -= dt
 
     def reload(self, dt):
         if self.charge < self.magazine:
