@@ -118,7 +118,10 @@ class GameScene(pyglet.window.Window):
         self.interface.append(item)
 
     def del_item(self, item):
-        self.items.remove(item)
+        try:
+            self.items.remove(item)
+        except KeyError as ex:
+            pass
 
     def add_item(self, item):
         self.items.add(item)
@@ -155,15 +158,21 @@ class GameScene(pyglet.window.Window):
         self._score = 0
         self._bonus = 0
         self._ships = 4
+
+        self.user_ship.visible(False)
+        self.del_item(self.user_ship)
+
         while self.items:
             item = self.items.pop()
             item.destroy()
-            del item
 
         while self.stars:
             bonus = self.stars.pop()
             bonus.destroy()
             del bonus
+
+        self.user_ship.live = False
+        self.usePortal()
 
     def on_draw(self):
         self.clear()
@@ -447,11 +456,9 @@ class GameScene(pyglet.window.Window):
     def usePortal(self):
         if self._ships > 0:
             if self.user_ship.live is False:
-                self.restart()
+                self.user_ship.reset()
+                self.arrivalShip()
 
-    def restart(self):
-        self.user_ship.reset()
-        self.arrivalShip()
 
 if __name__ == "__main__":
     game = GameScene(800, 600)

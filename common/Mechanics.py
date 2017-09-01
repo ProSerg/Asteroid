@@ -157,7 +157,10 @@ class ShipMechanics(BaseMechanics):
         self._const_reload_weapon_time = 2
 
         self._time_reload_engine = 0
-        self._const_reload_engine_time = 3
+        self._const_recovery_engine_time = 2
+        self._const_reset_engine_time = 5
+        self._reset_engine = 0.3
+        self._bool_reset = False
 
         self.magazine = magazine
         self.charge = self.magazine
@@ -165,7 +168,7 @@ class ShipMechanics(BaseMechanics):
         self._cost_bullet = 1.0
         self._reload_power = 1.8
         self._reload_energy = 15.0
-        self._cost_energy = 30.0
+        self._cost_energy = 27.0
         self.live = live
         self.key_handler = key.KeyStateHandler()
         self.damage = 0
@@ -246,8 +249,11 @@ class ShipMechanics(BaseMechanics):
                 self.velocity_x += force_x
                 self.velocity_y += force_y
                 self.expens_energy(dt*self._cost_energy)
-                self._time_reload_engine = self._const_reload_engine_time
-
+                self._time_reload_engine = self._const_recovery_engine_time
+        else:
+            if self._bool_reset is False:
+                self._time_reload_engine = self._const_reset_engine_time
+                self._bool_reset = True
 
         self.velocity_x -= self.velocity_x * self.resistance
         self.velocity_y -= self.velocity_y * self.resistance
@@ -258,6 +264,9 @@ class ShipMechanics(BaseMechanics):
 
 
         if self._time_reload_engine < 0:
+            if self._bool_reset is True:
+                self.energy += self.max_energy * self._reset_engine
+                self._bool_reset = False
             if self.energy < self.max_energy:
                 self.energy += dt * self._reload_energy
         else:
