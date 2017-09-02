@@ -1,0 +1,19 @@
+{
+    "sprite": {
+        "file" : "bullet.png",
+        "scale" : 0.3,
+        "rotation" : 90
+    },
+    "parameters": {
+        "resistance" : 0.0,
+        "rotateSpeed" : 2.0,
+        "thrust" : 500,
+        "damage" : 200,
+        "energy" : 700,
+        "magazine" : 10.0,
+        "costBullet" : 1.0,
+        "recoveryMagazine" : 1.8,
+        "constReloadWeaponTime"  : 2
+
+    }
+}

@@ -1,0 +1,15 @@
+{
+    "sprite": {
+          "file" : "asteroid_brown.png",
+          "scale" : 0.2,
+          "rotation" : 90
+    },
+    "parameters": {
+        "resistance" : 0.0,
+        "rotateSpeed" : 200.0,
+        "thrust" : 500,
+        "live" : 1000,
+        "damage" : 300,
+        "countSplinters" : 5
+    }
+}

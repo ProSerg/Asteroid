@@ -1,0 +1,15 @@
+{
+    "sprite": {
+          "file" : ["asteroid_gray.png", "asteroid_gray_2.png", "asteroid_dark.png"],
+          "scale" : 0.05,
+          "rotation" : 90
+    },
+    "parameters": {
+        "resistance" : 0.0,
+        "live" : 200,
+        "rotateSpeed" : 200.0,
+        "thrust" : 500,
+        "damage" : 300,
+        "countSplinters" : 0
+    }
+}
