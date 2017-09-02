@@ -9,6 +9,7 @@ class ResourcesLoader(Loader):
     ship_group = pyglet.graphics.OrderedGroup(2)
     asteroids_group = pyglet.graphics.OrderedGroup(3)
     effects = pyglet.graphics.OrderedGroup(4)
+    ui = pyglet.graphics.OrderedGroup(5)
 
     def __init__(self, resource_paths):
         self.resource_paths = resource_paths

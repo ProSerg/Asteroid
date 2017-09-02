@@ -8,6 +8,10 @@ class SpriteParameter(Enum):
     FILESNAME = "files"
     SCALE = "scale"
     ROTATION = "rotation"
+    TYPE_IMAGE = "typeImage"
+    TYPE = "type"
+    DURATION = "duration"
+    LOOPED = "looped"
 
 class ObjectParameter(Enum):
     THRUST = "thrust"
@@ -31,6 +35,7 @@ class ObjectParameter(Enum):
     ENERGY = "energy"
     WEAPON = "weapon"
     COUNT_SPLINTERS = "countSplinters"
+    BONUS = "bonus"
 
 class JsonManager(object):
     def __init__(self, work_dir="."):

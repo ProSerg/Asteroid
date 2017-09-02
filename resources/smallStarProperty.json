@@ -1,0 +1,31 @@
+{
+    "sprite": {
+          "file" : [
+            "galaxy_0.png",
+            "galaxy_1.png",
+            "galaxy_2.png",
+            "galaxy_3.png",
+            "galaxy_4.png",
+            "galaxy_5.png",
+            "galaxy_6.png",
+            "galaxy_7.png",
+            "galaxy_8.png",
+            "galaxy_9.png",
+            "galaxy_10.png",
+            "galaxy_11.png"
+          ],
+          "typeImage" : "frames",
+          "type" : "animation",
+          "duration" : 0.1,
+          "looped" : true,
+          "scale" : 0.2,
+          "rotation" : 0
+    },
+    "parameters": {
+        "resistance" : 0.0,
+        "rotateSpeed" : 0.0,
+        "thrust" : 0,
+        "bonus" : 1,
+        "live" : 7
+    }
+}

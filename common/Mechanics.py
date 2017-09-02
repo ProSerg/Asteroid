@@ -125,30 +125,24 @@ class BulletMechanics(BaseMechanics):
         return self.energy > 0
 
 class StarMechanics(BaseMechanics):
-    def __init__(self, cost, time):
+    def __init__(self, bonus, live):
         super(StarMechanics, self).__init__(
             resistance=0,
             rotate_speed=0,
             thrust=0,
         )
-        self.cost = cost
-        self.time = time
-        self.ctime = 0
-        self.live = True
-        self.boom = False
+        self.bonus = bonus
+        self.live = live
+        self.used = False
 
     def destroy(self):
-        self.live = False
+        self.live = -1
 
     def process_live(self, dt):
-        if self.ctime > self.time:
-            self.live = False
-            self.boom = True
-        else:
-            self.ctime += dt
+        self.live -= dt
 
     def is_live(self):
-        return self.live
+        return self.live > 0
 
 class FighterMechanics(BaseMechanics):
 
