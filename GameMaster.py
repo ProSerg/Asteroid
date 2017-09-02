@@ -29,13 +29,16 @@ class GameMaster(object):
         self.jsonManager.addJsonData("mediumAsteroid", "resources\\mediumAsteroidProperty.json")
         self.jsonManager.addJsonData("bigAsteroid",    "resources\\bigAsteroidProperty.json")
         self.jsonManager.addJsonData("aBullet",        "resources\\aBullet.json")
+        self.jsonManager.addJsonData("smallStar", "resources\\smallStarProperty.json")
+        self.jsonManager.addJsonData("mediumStar", "resources\\mediumStarProperty.json")
+        self.jsonManager.addJsonData("bigStar", "resources\\bigStarProperty.json")
 
         self.propertyManager = PropertyManager(self.jsonManager)
 
         self.unit_manager = UnitManager(self._loader, self.batch)
         self.anim_manager = AnimationManager(self._loader, self.batch)
         self.user_ui = UserUI(unit_manager=self.unit_manager, property_manager=self.propertyManager,
-                              group=self._loader.background, ship="fighter", batch=self.batch)
+                              group=self._loader.ui, ship="fighter", batch=self.batch)
 
         self.anim_manager.createSpringEffect(
             name="asteroid_boom",
@@ -110,6 +113,27 @@ class GameMaster(object):
 
     def createAnimation(self, name, x, y,  rotation=0, group=None):
         return self.anim_manager.createAnimation(name, x, y, rotation, group=group)
+
+    def createBackGround(self):
+        x = 400
+        y = 400
+        fon1 = self.unit_manager.get_sprite(
+            name="background_4.png",
+            x=400,
+            y=200,
+            scale=1.0,
+            rotation=0.0,
+            group=self._loader.background,
+        )
+        fon2 = self.unit_manager.get_sprite(
+            name="background_4.png",
+            x=400,
+            y=400,
+            scale=1.0,
+            rotation=0.0,
+            group=self._loader.background,
+        )
+        return [fon1,fon2]
 
     def generate_asteroid(self, name,  x, y):
         rotation = random.randint(0, 360)
@@ -223,67 +247,21 @@ class GameMaster(object):
         ship.add(engine2)
         return ship
 
-    def make_star(self, x, y, type, time ):
-        star_proton = [
-            "p_Sprite_0.png",
-            "p_Sprite_1.png",
-            "p_Sprite_2.png",
-            "p_Sprite_3.png",
-            "p_Sprite_4.png",
-            "p_Sprite_5.png",
-            "p_Sprite_6.png",
-            "p_Sprite_7.png",
-            "p_Sprite_8.png",
-            "p_Sprite_9.png",
-            "p_Sprite_10.png",
-            "p_Sprite_11.png",
-            "p_Sprite_12.png",
-            "p_Sprite_13.png",
-            "p_Sprite_14.png",
-            # "p_Sprite_15.png",
-            # "p_Sprite_16.png",
-        ]
-
-        star_galaxy = [
-            "galaxy_0.png",
-            "galaxy_1.png",
-            "galaxy_2.png",
-            "galaxy_3.png",
-            "galaxy_4.png",
-            "galaxy_5.png",
-            "galaxy_6.png",
-            "galaxy_7.png",
-            "galaxy_8.png",
-            "galaxy_9.png",
-            "galaxy_10.png",
-            "galaxy_11.png",
-            # "galaxy_12.png",
-            # "galaxy_13.png",
-            # "galaxy_14.png",
-        ]
-
-        if TypeAsteroid.BIG.value == type.value:
-            cost = 10
-            scale = .25
-            img = star_proton
-        elif TypeAsteroid.MEDIUM.value == type.value:
-            cost = 5
-            scale = .15
-            img = star_proton
-        else:
-            cost = 1
-            scale = .2
-            img = star_galaxy
+    def make_star(self, x, y, type):
+        root = "{}Star".format(type.value)
 
         star_sprite = self.anim_manager.getSpringEffect(
-            img=img, type_image="frames", group=self._loader.foreground, scale=scale,
-            looped=True, duration=0.1, rotation=0)
-
-        # star_sprite.x = x - star_sprite.width/2
-        # star_sprite.y = y - star_sprite.height/2
+            img=self.propertyManager.get_sprite(root, SpriteParameter.FILENAME),
+            type_image=self.propertyManager.get_sprite(root, SpriteParameter.TYPE_IMAGE),
+            group=self._loader.foreground,
+            scale=self.propertyManager.get_sprite(root, SpriteParameter.SCALE),
+            looped=self.propertyManager.get_sprite(root, SpriteParameter.LOOPED),
+            duration=self.propertyManager.get_sprite(root, SpriteParameter.DURATION),
+            rotation=self.propertyManager.get_sprite(root, SpriteParameter.ROTATION))
 
         star_mechanics = StarMechanics(
-            cost, time
+            self.propertyManager.get_parameter(root, ObjectParameter.BONUS),
+            self.propertyManager.get_parameter(root, ObjectParameter.LIVE)
         )
 
         star = ItemObject(
@@ -295,9 +273,6 @@ class GameMaster(object):
             mechanic=star_mechanics,
             bounds=Rectangle(width=star_sprite.width, height=star_sprite.height, rotation=0, color=Color.Green),
         )
-
-        star.time = time
-        star.cost = cost
 
         return star
 

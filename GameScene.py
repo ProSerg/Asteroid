@@ -37,6 +37,7 @@ class GameScene(pyglet.window.Window):
         "".join((path_to_resource, "/Effects/Red Explosion")),
         "".join((path_to_resource, "/Effects/Fires")),
         "".join((path_to_resource, "/Asteroids")),
+        "".join((path_to_resource, "/Background")),
     ]
 
     def __init__(self, width, height, DEBUG_MOD=False):
@@ -65,9 +66,9 @@ class GameScene(pyglet.window.Window):
         self.user_ship = None
         self._start_ship_position = Point(400, 350)
 
-        self.master.make_star(-50,-50, TypeAsteroid.MEDIUM, 1)
-        self.master.make_star(-50,-50, TypeAsteroid.BIG, 1)
-        self.master.make_star(-50,-50, TypeAsteroid.SMALL, 1)
+        self.master.make_star(-50,-50, TypeAsteroid.MEDIUM)
+        self.master.make_star(-50,-50, TypeAsteroid.BIG)
+        self.master.make_star(-50,-50, TypeAsteroid.SMALL)
 
 
         ## USER SETTINGS
@@ -94,6 +95,7 @@ class GameScene(pyglet.window.Window):
         self.push_handlers(self.user_fighter.mechanic.key_handler)
         self.user_fighter.visible(False)
         self.arrivalShip()
+        self._background = self.master.createBackGround()
 
 
     def create_batch(self, name, status=True):
@@ -302,8 +304,9 @@ class GameScene(pyglet.window.Window):
 
         for star in self.stars:
             if self.check_collision(self.user_fighter, star) is True:
-                self._score += star.cost
+                self._score += star.mechanic.bonus
                 star.mechanic.destroy()
+                star.mechanic.used = True
 
         if flag is True:
             self.user_fighter.bounds.color = Color.Red
@@ -327,7 +330,7 @@ class GameScene(pyglet.window.Window):
                     splinters = self.master.generate_splinters(obj)
                     for item in splinters:
                         self.add_item(item)
-                    self.stars.append(self.master.make_star(obj.sprite.x, obj.sprite.y, obj.mechanic.typeAsteroid, 7))
+                    self.stars.append(self.master.make_star(obj.sprite.x, obj.sprite.y, obj.mechanic.typeAsteroid))
                     self.del_item(obj)
                     obj.destroy()
                     del obj
@@ -354,8 +357,8 @@ class GameScene(pyglet.window.Window):
 
         for star in self.stars:
             star.process(dt)
-            if star.live is False:
-                if star.mechanic.boom is True:
+            if star.mechanic.is_live() is False:
+                if star.mechanic.used is False:
                     self.master.play(
                         "star_boom",
                         star.sprite.x + 25, star.sprite.y + 25, group=self.loader.effects)
@@ -394,7 +397,7 @@ class GameScene(pyglet.window.Window):
 
     def arrivalShip(self):
         self.master.play(
-            "portal", self._start_ship_position.x, self._start_ship_position.y, group=self.loader.background)
+            "portal", self._start_ship_position.x, self._start_ship_position.y, group=self.loader.effects)
         self.user_fighter.update_pos(
             x=self._start_ship_position.x,
             y=self._start_ship_position.y,
@@ -405,7 +408,7 @@ class GameScene(pyglet.window.Window):
 
     def leavingShip(self):
         self.master.play(
-            "portal", self.user_fighter.sprite.x, self.user_fighter.sprite.y, group=self.loader.background)
+            "portal", self.user_fighter.sprite.x, self.user_fighter.sprite.y, group=self.loader.effects)
         self.user_fighter.visible(False)
         self.del_item(self.user_fighter)
         self._ships += 1
