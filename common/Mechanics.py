@@ -175,6 +175,7 @@ class ShipMechanics(BaseMechanics):
         self.max_energy = 200
         self.energy = self.max_energy
         self._moving = False
+        self._rotate_const = 0.5
 
     def getAmmo(self):
         ammo = (self.charge/self.magazine) * 100
@@ -224,19 +225,24 @@ class ShipMechanics(BaseMechanics):
         force_x = 0
         force_y = 0
         if self.key_handler[key.LEFT]:
-            if self.energy < self._cost_energy:
-                self.velocity_angle = -self.rotate_speed * dt * 0.5
+            if self.energy <= 0:
+                self.velocity_angle = -self.rotate_speed * dt * self._rotate_const * 0.5
             else:
-                self.velocity_angle = -self.rotate_speed * dt
-                # self.expens_energy(dt*self._cost_energy*0.2)
+                self.velocity_angle = -self.rotate_speed * dt * self._rotate_const
+            if self._rotate_const < 1.0:
+                self._rotate_const += 0.05
+
         elif self.key_handler[key.RIGHT]:
-            if self.energy < self._cost_energy :
-                self.velocity_angle = self.rotate_speed * dt * 0.5
+            if self.energy <= 0:
+                self.velocity_angle = self.rotate_speed * dt * self._rotate_const * 0.5
             else:
-                self.velocity_angle = self.rotate_speed * dt
-                # self.expens_energy(dt*self._cost_energy*0.2)
+                self.velocity_angle = self.rotate_speed * dt * self._rotate_const
+            if self._rotate_const < 1.0:
+                self._rotate_const += 0.05
         else:
+            print("self._rotate_const ", self._rotate_const)
             self.velocity_angle = 0
+            self._rotate_const = 0.5
 
         self.rotation += self.velocity_angle
 

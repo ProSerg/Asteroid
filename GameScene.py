@@ -422,7 +422,7 @@ class GameScene(pyglet.window.Window):
             if obj.name.find("Asteroid") != -1:
                 obj.mechanic.live = 0
 
-    def create_wave(self, numbers=10):
+    def create_wave(self, numbers=7):
         for num in range(numbers):
             asteroid = self.master.make_asteroid(
                 name="Asteroid_{}".format(num),
