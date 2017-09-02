@@ -28,6 +28,7 @@ class UnitManager(object):
         self._units = []
 
     def get_sprite(self, name="", x=0, y=0, rotation=0, group=None, scale=1.0, anchor="center"):
+
         image = self.loader.create_image(image=name, anchor=anchor)
 
         new_sprite = ASprite(

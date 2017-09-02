@@ -5,14 +5,16 @@ from Asteroid.common.Mechanics import *
 from Asteroid.common.Collisions import *
 from Asteroid.common.UnitManager import *
 from Asteroid.common.AnimationManager import *
+from Asteroid.common.ResourceManager import *
+
 import random
 from pathlib import Path
 # Set up a window
 
 class TypeAsteroid(Enum):
-    BIG = 0
-    MEDIUM = 1
-    SMALL = 2
+    BIG = "big"
+    MEDIUM = "medium"
+    SMALL = "small"
 
 class GameMaster(object):
     NUMS_ASTEROIDS = 10
@@ -21,9 +23,19 @@ class GameMaster(object):
         self._loader = loader
         self.batch = batch
 
+        self.jsonManager = JsonManager()
+        self.jsonManager.addJsonData("fighter", "resources\\fighterProperty.json")
+        self.jsonManager.addJsonData("smallAsteroid",  "resources\\smallAsteroidProperty.json")
+        self.jsonManager.addJsonData("mediumAsteroid", "resources\\mediumAsteroidProperty.json")
+        self.jsonManager.addJsonData("bigAsteroid",    "resources\\bigAsteroidProperty.json")
+        self.jsonManager.addJsonData("aBullet",        "resources\\aBullet.json")
+
+        self.propertyManager = PropertyManager(self.jsonManager)
+
         self.unit_manager = UnitManager(self._loader, self.batch)
         self.anim_manager = AnimationManager(self._loader, self.batch)
-        self.user_ui = UserUI(unit_manager=self.unit_manager, group=self._loader.background, batch=self.batch)
+        self.user_ui = UserUI(unit_manager=self.unit_manager, property_manager=self.propertyManager,
+                              group=self._loader.background, ship="fighter", batch=self.batch)
 
         self.anim_manager.createSpringEffect(
             name="asteroid_boom",
@@ -93,45 +105,49 @@ class GameMaster(object):
         self.shoot = True
         self.resistance = 0.015
 
-
     def play(self, name, x, y,  rotation=0, group=None): # FIXME rotation must be  eq 0 only
         self.anim_manager.playAnimation(name, x, y, rotation, group=group)
 
-    def createAnimation(self,name, x, y,  rotation=0, group=None):
+    def createAnimation(self, name, x, y,  rotation=0, group=None):
         return self.anim_manager.createAnimation(name, x, y, rotation, group=group)
 
-    def make_asteroid(self, name,  x, y, rotation, rotate_speed, thrust, type=TypeAsteroid.MEDIUM):
-        if TypeAsteroid.MEDIUM.value == type.value:
-            asteroid_sprite = self.unit_manager.get_sprite(
-                name="asteroid_brown.png",
-                scale=0.1,
-                rotation=90,
+    def generate_asteroid(self, name,  x, y):
+        rotation = random.randint(0, 360)
+        asteroid = self.make_asteroid(
+            name,  x, y, rotation,
+            type_asteroid=random.choice([TypeAsteroid.BIG, TypeAsteroid.MEDIUM, TypeAsteroid.SMALL]))
+        asteroid.mechanic.rotate_speed = random.randint(-200, 200)
+        asteroid.mechanic.thrust = random.randint(50, 300)
+        return asteroid
+
+    def generate_splinters(self, parent):
+        splinters = []
+        for idx in range(0, parent.mechanic.countSplinters):
+            splinter = self.make_asteroid(
+                name="Asteroid",
+                x=parent.sprite.x,
+                y=parent.sprite.y,
+                rotation=random.randint(0, 360),
+                type_asteroid=TypeAsteroid.SMALL)
+            splinter.mechanic.rotate_speed = parent.mechanic.rotate_speed - int(parent.mechanic.rotate_speed * 0.1)
+            splinter.mechanic.thrust = parent.mechanic.thrust - int(parent.mechanic.thrust * 0.1)
+            splinters.append(splinter)
+        return splinters
+
+    def make_asteroid(self, name,  x, y, rotation, type_asteroid):
+        root = "{}Asteroid".format(type_asteroid.value)
+        image = lambda images: random.choice(images) if type(images) is list else images
+        asteroid_sprite = self.unit_manager.get_sprite(
+                name=image(self.propertyManager.get_sprite(root, SpriteParameter.FILENAME)),
+                scale=self.propertyManager.get_sprite(root, SpriteParameter.SCALE),
+                rotation=rotation,
                 group=self._loader.asteroids_group,
-            )
-            live = 600
-        elif TypeAsteroid.BIG.value == type.value:
-            asteroid_sprite = self.unit_manager.get_sprite(
-                name="asteroid_brown.png",
-                scale=0.15,
-                rotation=90,
-                group=self._loader.asteroids_group,
-            )
-            live = 1000
-        else:
-            asteroid_sprite = self.unit_manager.get_sprite(
-                name=random.choice(["asteroid_gray.png","asteroid_gray_2.png", "asteroid_dark.png"]),
-                scale=0.05,
-                rotation=90,
-                group=self._loader.asteroids_group,
-            )
-            live = 200
+        )
 
         asteroid_mechanics = AsteroidMechanics(
-            resistance=0.0,
-            thrust=thrust,
-            typeAsteroid=type,
-            rotate_speed=rotate_speed,
-            live=live,
+            name=root,
+            property_manager=self.propertyManager,
+            type_asteroid=type_asteroid,
         )
 
         asteroid = ItemObject(
@@ -146,29 +162,18 @@ class GameMaster(object):
 
         return asteroid
 
-
-    def make_user_ship(self, x , y, rotation, rotate_speed, thrust ):
-        fire_image = [
-            "fire_3.png",
-            "fire_4.png",
-            "fire_6.png",
-            "fire_7.png",
-            "fire_8.png",
-        ]
+    def make_user_ship(self, x, y):
+        root = "fighter"
 
         sprite = self.unit_manager.get_sprite(
-            name="player_ship.png",
-            scale=0.1,
-            rotation=90,
+            name=self.propertyManager.get_sprite(root, SpriteParameter.FILENAME),
+            scale=self.propertyManager.get_sprite(root, SpriteParameter.SCALE),
+            rotation=self.propertyManager.get_sprite(root, SpriteParameter.ROTATION),
             group=self._loader.ship_group,
         )
 
-        ship_mechanics = ShipMechanics(
-            resistance=self.resistance,
-            thrust=thrust,
-            rotate_speed=rotate_speed,
-            live=1000,
-            magazine=7,
+        ship_mechanics = FighterMechanics(
+            property_manager=self.propertyManager,
         )
 
         ship = ItemObject(
@@ -176,10 +181,18 @@ class GameMaster(object):
             y=y,
             name="UserShip",
             sprite=sprite,
-            rotation=rotation,
+            rotation=self.propertyManager.get_sprite(root, SpriteParameter.ROTATION),
             mechanic=ship_mechanics,
             bounds=Rectangle(width=sprite.width, height=sprite.height, rotation=0, color=Color.Green),
         )
+
+        fire_image = [
+            "fire_3.png",
+            "fire_4.png",
+            "fire_6.png",
+            "fire_7.png",
+            "fire_8.png",
+        ]
 
         engine_sprite = self.anim_manager.getSpringEffect(
             img=fire_image, type_image="frames", group=self._loader.foreground, scale=0.2,
@@ -288,21 +301,18 @@ class GameMaster(object):
 
         return star
 
-    def make_bullet(self, x, y, rotation, energy):
+    def make_bullet(self, x, y, rotation, weapon):
         bullet_sprite = self.unit_manager.get_sprite(
-            name="bullet.png",
-            scale=0.3,
-            rotation=90,
+            name=self.propertyManager.get_sprite(weapon,SpriteParameter.FILENAME),
+            scale=self.propertyManager.get_sprite(weapon,SpriteParameter.SCALE),
+            rotation=self.propertyManager.get_sprite(weapon,SpriteParameter.ROTATION),
             group=self._loader.effects,
         )
 
         bullet_mechanics = BulletMechanics(
-            resistance=0.0,
-            thrust=500,
-            rotate_speed=2.0,
-            energy=energy,
-            damage=200,
-        )
+            property_manager=self.propertyManager,
+            weapon=weapon)
+
         bounds = Circle(
             radius=bullet_sprite.width / 2, color=Color.Red , num_segments=100,
             slide_x=(bullet_sprite.height/2 - bullet_sprite.width/2) * 0.8, slide_y=00)
@@ -318,5 +328,4 @@ class GameMaster(object):
             mechanic=bullet_mechanics,
             bounds=bounds,
         )
-
         return bullet

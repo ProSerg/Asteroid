@@ -3,6 +3,34 @@ from enum import Enum
 import platform
 import random
 
+class SpriteParameter(Enum):
+    FILENAME = "file"
+    FILESNAME = "files"
+    SCALE = "scale"
+    ROTATION = "rotation"
+
+class ObjectParameter(Enum):
+    THRUST = "thrust"
+    RESISTANCE = "resistance"
+    ROTATE_SPEED = "rotateSpeed"
+    MAGAZINE = "magazine"
+    LIVE = "live"
+    COST_BULLET = "costBullet"
+    RECOVERY_MAGAZINE = "recoveryMagazine"
+    RECOVERY_ENERGY = "recoveryEnergy"
+    CONSUMPTION_ENERGY = "consumptionEnergy"
+    POWER_BANK = "powerBank"
+    RESET_ENGINE = "resetEngine"
+    WEAPON_POWER = "weaponPower"
+    CONST_RELOAD_WEAPON_TIME = "constReloadWeaponTime"
+    CONST_RECOVERY_ENGINE_TIME = "constRecoveryEngineTime"
+    CONST_RESET_ENGINE_TIME = "constResetEngineTime"
+    CONST_ROTATE_FACTOR = "constRotateFactor"
+    CONST_ROTATE_STEP_FACTOR = "constRotateStepFactor"
+    DAMAGE = "damage"
+    ENERGY = "energy"
+    WEAPON = "weapon"
+    COUNT_SPLINTERS = "countSplinters"
 
 class JsonManager(object):
     def __init__(self, work_dir="."):
@@ -18,9 +46,13 @@ class JsonManager(object):
             print("ReadJson: {}".format(ex))
 
     def getDB(self, name):
-        with open(self._db.get(name)) as json_data:
-            data = json.load(json_data)
-            return data
+        try:
+            with open(self._db.get(name)) as json_data:
+                data = json.load(json_data)
+                return data
+        except Exception as ex:
+            print("Expect this jsonBase {}".format(name))
+            return None
 
     def getProperty(self, name, key):
         with open(self._db.get(name)) as json_data:
@@ -30,18 +62,26 @@ class JsonManager(object):
 
 
 class PropertyManager(object):
-    def __init__(self, jsonManager, name):
-        self._name = name
+    def __init__(self, jsonManager):
         self._manager = jsonManager
-        self._db = None
 
-    def update(self):
-        self._db = self._manager.getDB(self._name)
+    def _getDB(self, name):
+        return self._manager.getDB(name)
 
-    def _getDB(self):
-        if self._db:
-            return self._db
-        self._db = self._manager.getDB(self._name)
-        return self._db
+    def get_sprite(self, name_object, parameter):
+        try:
+            value = self._getDB(name_object).get("sprite").get(parameter.value)
+        except AttributeError as ex:
+            return None
+        else:
+            return value
 
+
+    def get_parameter(self, name_object, parameter):
+        try:
+            value = self._getDB(name_object).get("parameters").get(parameter.value)
+        except AttributeError as ex:
+            return None
+        else:
+            return value
 

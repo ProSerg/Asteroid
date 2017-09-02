@@ -1,14 +1,16 @@
 import Asteroid.common.Resources as Resources
 from Asteroid.Items.ItemObject import ItemObject
 import pyglet
+from Asteroid.common.ResourceManager import *
 
 class UserUI(object):
 
-    def __init__(self, unit_manager, group, batch, *args, **kwargs):
+    def __init__(self, unit_manager, property_manager, ship,  group, batch, *args, **kwargs):
         self._batch = batch
+        self._propertyManager = property_manager
 
         self.ship = unit_manager.get_sprite(
-            name="player_ship.png",
+            name=self._propertyManager.get_sprite(ship, SpriteParameter.FILENAME),
             scale=0.05,
             rotation=0,
             group=group,

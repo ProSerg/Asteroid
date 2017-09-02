@@ -1,6 +1,6 @@
 import math
 from pyglet.window import key
-
+from Asteroid.common.ResourceManager import *
 
 class BaseMechanics(object):
     def __init__(self, resistance, rotate_speed, thrust):
@@ -61,25 +61,28 @@ class BaseMechanics(object):
 
 
 class AsteroidMechanics(BaseMechanics):
-    def __init__(self, resistance, rotate_speed, typeAsteroid, thrust, live=500):
+    def __init__(self, name, type_asteroid, property_manager):
+        self._root = name
+        self._propertyManager = property_manager
         super(AsteroidMechanics, self).__init__(
-            resistance=resistance,
-            rotate_speed=rotate_speed,
-            thrust=thrust,
+            resistance=self._propertyManager.get_parameter(self._root, ObjectParameter.RESISTANCE),
+            rotate_speed=self._propertyManager.get_parameter(self._root, ObjectParameter.ROTATE_SPEED),
+            thrust=self._propertyManager.get_parameter(self._root, ObjectParameter.THRUST),
         )
-        self.live = live
-        self.damage = 0
-        self.typeAsteroid = typeAsteroid
+        self.live = self._propertyManager.get_parameter(self._root, ObjectParameter.LIVE)
+        self.damage = self._propertyManager.get_parameter(self._root, ObjectParameter.DAMAGE)
+        self.typeAsteroid = type_asteroid
+        self.countSplinters = self._propertyManager.get_parameter(self._root, ObjectParameter.COUNT_SPLINTERS)
+        self._get_damage = 0
 
     def add_damage(self, value):
-        self.damage += value
+        self._get_damage += value
 
     def process_live(self, dt):
-        self.live -= self.damage
-        self.damage = 0
+        self.live -= self._get_damage
+        self._get_damage = 0
 
     def update(self, dt):
-        #self.rotation += self.rotate_speed * dt
         angle_radians = -math.radians(self.rotation)
         self.velocity_x = math.cos(angle_radians) * self.thrust
         self.velocity_y = math.sin(angle_radians) * self.thrust
@@ -91,15 +94,17 @@ class AsteroidMechanics(BaseMechanics):
         return self.live > 0
 
 class BulletMechanics(BaseMechanics):
-    def __init__(self, resistance, rotate_speed, thrust, energy=700, damage=200):
+    def __init__(self, property_manager, weapon):
+        self._root = weapon
+        self._propertyManager = property_manager
         super(BulletMechanics, self).__init__(
-            resistance=resistance,
-            rotate_speed=rotate_speed,
-            thrust=thrust,
+            resistance=self._propertyManager.get_parameter(self._root, ObjectParameter.RESISTANCE),
+            thrust=self._propertyManager.get_parameter(self._root, ObjectParameter.THRUST),
+            rotate_speed=self._propertyManager.get_parameter(self._root, ObjectParameter.ROTATE_SPEED),
         )
         self.boom = False
-        self.energy = energy
-        self.damage = damage
+        self.energy = self._propertyManager.get_parameter(self._root, ObjectParameter.ENERGY)
+        self.damage = self._propertyManager.get_parameter(self._root, ObjectParameter.DAMAGE)
         self.key_handler = key.KeyStateHandler()
 
     def destroy(self):
@@ -145,37 +150,73 @@ class StarMechanics(BaseMechanics):
     def is_live(self):
         return self.live
 
-class ShipMechanics(BaseMechanics):
+class FighterMechanics(BaseMechanics):
 
-    def __init__(self, resistance, rotate_speed, thrust,  magazine=3, live=1000):
-        super(ShipMechanics, self).__init__(
-            resistance=resistance,
-            rotate_speed=rotate_speed,
-            thrust=thrust,
+    def __init__(self, property_manager):
+        self._propertyManager = property_manager
+        self._root = "fighter"
+        super(FighterMechanics, self).__init__(
+            resistance=self._propertyManager.get_parameter(self._root, ObjectParameter.RESISTANCE),
+            thrust=self._propertyManager.get_parameter(self._root, ObjectParameter.THRUST),
+            rotate_speed=self._propertyManager.get_parameter(self._root, ObjectParameter.ROTATE_SPEED),
         )
-        self._time_reload_weapon = 0
-        self._const_reload_weapon_time = 2
 
-        self._time_reload_engine = 0
-        self._const_recovery_engine_time = 2
-        self._const_reset_engine_time = 5
-        self._reset_engine = 0.3
-        self._bool_reset = False
+        self.live = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.LIVE)
 
-        self.magazine = magazine
+        self.power_bank = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.POWER_BANK)
+
+        self.weapon = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.WEAPON)
+
+        # weapon
+        self.magazine = self._propertyManager.get_parameter(
+            self.weapon, ObjectParameter.MAGAZINE)
+
+        self._cost_bullet = self._propertyManager.get_parameter(
+            self.weapon, ObjectParameter.COST_BULLET)
+
+        self._reload_magazine = self._propertyManager.get_parameter(
+            self.weapon, ObjectParameter.RECOVERY_MAGAZINE)
+
+        self._const_reload_weapon_time = self._propertyManager.get_parameter(
+            self.weapon, ObjectParameter.CONST_RELOAD_WEAPON_TIME)
+
+        # engine
+        self._reload_energy = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.RECOVERY_ENERGY)
+
+        self._consumption_energy = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.CONSUMPTION_ENERGY)
+
+        self._reset_engine = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.RESET_ENGINE)
+
+        self._const_recovery_engine_time = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.CONST_RECOVERY_ENGINE_TIME)
+
+        self._const_reset_engine_time = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.CONST_RESET_ENGINE_TIME)
+
+        self._const_rotate_factor = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.CONST_ROTATE_FACTOR)
+
+        self._const_rotate_step_factor = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.CONST_ROTATE_STEP_FACTOR)
+
+        self._rotate_factor = self._const_rotate_factor
+
         self.charge = self.magazine
-        self.starting_live = live
-        self._cost_bullet = 1.0
-        self._reload_power = 1.8
-        self._reload_energy = 15.0
-        self._cost_energy = 27.0
-        self.live = live
+        self.starting_live = self.live
+        self.energy = self.power_bank
+
         self.key_handler = key.KeyStateHandler()
-        self.damage = 0
-        self.max_energy = 200
-        self.energy = self.max_energy
+        self._time_reload_weapon = 0
+        self._time_reload_engine = 0
+        self._get_damage = 0
         self._moving = False
-        self._rotate_const = 0.5
+        self._bool_reset = False
 
     def getAmmo(self):
         ammo = (self.charge/self.magazine) * 100
@@ -190,7 +231,7 @@ class ShipMechanics(BaseMechanics):
         return int(live)
 
     def getEnergy(self):
-        energy = (self.energy / float(self.max_energy))
+        energy = (self.energy / float(self.power_bank))
         if energy > 1.0:
             energy = 1.0
         return energy
@@ -198,14 +239,14 @@ class ShipMechanics(BaseMechanics):
     def reset(self):
         self.live = self.starting_live
         self.charge = self.magazine
-        self.energy = self.max_energy
-        self.damage = 0
+        self.energy = self.power_bank
+        self._get_damage = 0
         self.velocity_x = 0
         self.velocity_y = 0
         self.velocity_angle = 0
 
     def add_damage(self, value):
-        self.damage += value
+        self._get_damage += value
 
     def expens_energy(self, value):
         self.energy -= value
@@ -218,31 +259,30 @@ class ShipMechanics(BaseMechanics):
         return False
 
     def process_live(self, dt):
-        self.live -= self.damage
-        self.damage = 0
+        self.live -= self._get_damage
+        self._get_damage = 0
 
     def update(self, dt):
         force_x = 0
         force_y = 0
         if self.key_handler[key.LEFT]:
             if self.energy <= 0:
-                self.velocity_angle = -self.rotate_speed * dt * self._rotate_const * 0.5
+                self.velocity_angle = -self.rotate_speed * dt * self._rotate_factor * 0.5
             else:
-                self.velocity_angle = -self.rotate_speed * dt * self._rotate_const
-            if self._rotate_const < 1.0:
-                self._rotate_const += 0.05
+                self.velocity_angle = -self.rotate_speed * dt * self._rotate_factor
+            if self._rotate_factor < 1.0:
+                self._rotate_factor += self._const_rotate_step_factor
 
         elif self.key_handler[key.RIGHT]:
             if self.energy <= 0:
-                self.velocity_angle = self.rotate_speed * dt * self._rotate_const * 0.5
+                self.velocity_angle = self.rotate_speed * dt * self._rotate_factor * 0.5
             else:
-                self.velocity_angle = self.rotate_speed * dt * self._rotate_const
-            if self._rotate_const < 1.0:
-                self._rotate_const += 0.05
+                self.velocity_angle = self.rotate_speed * dt * self._rotate_factor
+            if self._rotate_factor < 1.0:
+                self._rotate_factor += self._const_rotate_step_factor
         else:
-            print("self._rotate_const ", self._rotate_const)
             self.velocity_angle = 0
-            self._rotate_const = 0.5
+            self._rotate_factor = self._const_rotate_factor
 
         self.rotation += self.velocity_angle
 
@@ -254,7 +294,7 @@ class ShipMechanics(BaseMechanics):
                 force_y = math.sin(angle_radians) * self.thrust * dt
                 self.velocity_x += force_x
                 self.velocity_y += force_y
-                self.expens_energy(dt*self._cost_energy)
+                self.expens_energy(dt*self._consumption_energy)
                 self._time_reload_engine = self._const_recovery_engine_time
         else:
             if self._bool_reset is False:
@@ -268,12 +308,11 @@ class ShipMechanics(BaseMechanics):
         self.dy = self.velocity_y * dt
         self.da = self.velocity_angle
 
-
         if self._time_reload_engine < 0:
             if self._bool_reset is True:
-                self.energy += self.max_energy * self._reset_engine
+                self.energy += self.power_bank * self._reset_engine
                 self._bool_reset = False
-            if self.energy < self.max_energy:
+            if self.energy < self.power_bank:
                 self.energy += dt * self._reload_energy
         else:
             self._time_reload_engine -= dt
@@ -285,7 +324,7 @@ class ShipMechanics(BaseMechanics):
 
     def reload(self, dt):
         if self.charge < self.magazine:
-            self.charge += dt * self._reload_power
+            self.charge += dt * self._reload_magazine
 
     def is_live(self):
         return self.live > 0
