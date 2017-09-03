@@ -241,7 +241,6 @@ class ItemObject(object):
         # dx = (self.sprite.x ) * cr - (self.sprite.y ) * sr
         # dy = (self.sprite.x ) * sr + (self.sprite.y ) * cr
 
-
         if self.sprite:
             d_x = self.sprite.x
             d_y = self.sprite.y

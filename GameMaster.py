@@ -24,19 +24,28 @@ class TypeItem(Enum):
     BULLET = "bullet"
     EFFECTS = "effect"
 
+class TypeShip(Enum):
+    BUG = "bug"
+    FIGHTER = "fighter"
+    SAUCER = "saucer"
+
 class GameMaster(object):
     NUMS_ASTEROIDS = 10
 
     def __init__(self, loader, batch):
         self._loader = loader
         self.batch = batch
+        self.type_user_ship = TypeShip.SAUCER
 
         self.jsonManager = JsonManager()
         self.jsonManager.addJsonData("fighter", "resources\\fighterProperty.json")
+        self.jsonManager.addJsonData("bug", "resources\\bugProperty.json")
+        self.jsonManager.addJsonData("saucer", "resources\\saucerProperty.json")
         self.jsonManager.addJsonData("smallAsteroid",  "resources\\smallAsteroidProperty.json")
         self.jsonManager.addJsonData("mediumAsteroid", "resources\\mediumAsteroidProperty.json")
         self.jsonManager.addJsonData("bigAsteroid",    "resources\\bigAsteroidProperty.json")
         self.jsonManager.addJsonData("aBullet",        "resources\\aBullet.json")
+        self.jsonManager.addJsonData("sBullet",        "resources\\sBullet.json")
         self.jsonManager.addJsonData("smallStar", "resources\\smallStarProperty.json")
         self.jsonManager.addJsonData("mediumStar", "resources\\mediumStarProperty.json")
         self.jsonManager.addJsonData("bigStar", "resources\\bigStarProperty.json")
@@ -46,7 +55,7 @@ class GameMaster(object):
         self.unit_manager = UnitManager(self._loader, self.batch)
         self.anim_manager = AnimationManager(self._loader, self.batch)
         self.user_ui = UserUI(unit_manager=self.unit_manager, property_manager=self.propertyManager,
-                              group=self._loader.ui, ship="fighter", batch=self.batch)
+                              group=self._loader.ui, ship=self.type_user_ship.value, batch=self.batch)
 
         self.anim_manager.createSpringEffect(
             name="asteroid_boom",
@@ -196,7 +205,7 @@ class GameMaster(object):
         return asteroid
 
     def make_user_ship(self, x, y):
-        root = "fighter"
+        root = self.type_user_ship.value
 
         sprite = self.unit_manager.get_sprite(
             name=self.propertyManager.get_sprite(root, SpriteParameter.FILENAME),
@@ -205,9 +214,21 @@ class GameMaster(object):
             group=self._loader.ship_group,
         )
 
-        ship_mechanics = FighterMechanics(
-            property_manager=self.propertyManager,
-        )
+        ship_mechanics = None
+
+        if self.type_user_ship == TypeShip.FIGHTER:
+            ship_mechanics = FighterMechanics(
+                property_manager=self.propertyManager,
+            )
+        elif self.type_user_ship == TypeShip.BUG:
+            ship_mechanics = BugMechanics(
+                property_manager=self.propertyManager,
+            )
+        elif self.type_user_ship == TypeShip.SAUCER:
+            ship_mechanics = SaucerMechanics(
+                property_manager=self.propertyManager,
+                callbackShoot=self.make_bullet
+            )
 
         ship = ItemObject(
             x=x,
@@ -220,41 +241,43 @@ class GameMaster(object):
             bounds=Rectangle(width=sprite.width, height=sprite.height, rotation=0, color=Color.Green),
         )
 
-        fire_image = [
-            "fire_3.png",
-            "fire_4.png",
-            "fire_6.png",
-            "fire_7.png",
-            "fire_8.png",
-        ]
+        if self.type_user_ship == TypeShip.FIGHTER:
 
-        engine_sprite = self.anim_manager.getSpringEffect(
-            img=fire_image, type_image="frames", group=self._loader.foreground, scale=0.2,
-            looped=True, duration=0.2, rotation=90)
-        engine_sprite2 = self.anim_manager.getSpringEffect(
-            img=fire_image, type_image="frames", group=self._loader.foreground, scale=0.2,
-            looped=True, duration=0.2, rotation=90)
+            fire_image = [
+                "fire_3.png",
+                "fire_4.png",
+                "fire_6.png",
+                "fire_7.png",
+                "fire_8.png",
+            ]
 
-        engine = ItemObject(
-            local_x=10,
-            local_y=40,
-            name="EngineItem",
-            sprite=engine_sprite,
-            rotation=0,
-            #bounds=Rectangle(width=engine_sprite.width, height=engine_sprite.height, rotation=0, color=Color.Red)
-        )
+            engine_sprite = self.anim_manager.getSpringEffect(
+                img=fire_image, type_image="frames", group=self._loader.foreground, scale=0.2,
+                looped=True, duration=0.2, rotation=90)
+            engine_sprite2 = self.anim_manager.getSpringEffect(
+                img=fire_image, type_image="frames", group=self._loader.foreground, scale=0.2,
+                looped=True, duration=0.2, rotation=90)
 
-        engine2 = ItemObject(
-            local_x=0,
-            local_y=40,
-            name="EngineItem2",
-            sprite=engine_sprite2,
-            rotation=0,
-            #bounds=Rectangle(width=engine_sprite.width, height=engine_sprite.height, rotation=0, color=Color.Red)
-        )
+            engine = ItemObject(
+                local_x=10,
+                local_y=40,
+                name="EngineItem",
+                sprite=engine_sprite,
+                rotation=0,
+                #bounds=Rectangle(width=engine_sprite.width, height=engine_sprite.height, rotation=0, color=Color.Red)
+            )
 
-        ship.add(engine)
-        ship.add(engine2)
+            engine2 = ItemObject(
+                local_x=0,
+                local_y=40,
+                name="EngineItem2",
+                sprite=engine_sprite2,
+                rotation=0,
+                #bounds=Rectangle(width=engine_sprite.width, height=engine_sprite.height, rotation=0, color=Color.Red)
+            )
+
+            ship.add(engine)
+            ship.add(engine2)
         return ship
 
     def make_star(self, x, y, type):

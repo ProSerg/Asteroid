@@ -249,6 +249,7 @@ class FighterMechanics(BaseMechanics):
         if self.charge > self._cost_bullet:
             self.charge -= self._cost_bullet
             self._time_reload_weapon = self._const_reload_weapon_time
+
             return True
         return False
 
@@ -301,6 +302,392 @@ class FighterMechanics(BaseMechanics):
         self.dx = self.velocity_x * dt
         self.dy = self.velocity_y * dt
         self.da = self.velocity_angle
+
+        if self._time_reload_engine < 0:
+            if self._bool_reset is True:
+                self.energy += self.power_bank * self._reset_engine
+                self._bool_reset = False
+            if self.energy < self.power_bank:
+                self.energy += dt * self._reload_energy
+        else:
+            self._time_reload_engine -= dt
+
+        if self._time_reload_weapon < 0:
+            self.reload(dt)
+        else:
+            self._time_reload_weapon -= dt
+
+    def reload(self, dt):
+        if self.charge < self.magazine:
+            self.charge += dt * self._reload_magazine
+
+    def is_live(self):
+        return self.live > 0
+
+class SaucerMechanics(BaseMechanics):
+
+    def __init__(self, property_manager, callbackShoot=None):
+        self._propertyManager = property_manager
+        self._root = "saucer"
+        self.callbackShoot = callbackShoot
+        super(SaucerMechanics, self).__init__(
+            resistance=self._propertyManager.get_parameter(self._root, ObjectParameter.RESISTANCE),
+            thrust=self._propertyManager.get_parameter(self._root, ObjectParameter.THRUST),
+            rotate_speed=self._propertyManager.get_parameter(self._root, ObjectParameter.ROTATE_SPEED),
+        )
+
+        self.live = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.LIVE)
+
+        self.power_bank = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.POWER_BANK)
+
+        self.weapon = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.WEAPON)
+
+        # weapon
+        self.magazine = self._propertyManager.get_parameter(
+            self.weapon, ObjectParameter.MAGAZINE)
+
+        self._cost_bullet = self._propertyManager.get_parameter(
+            self.weapon, ObjectParameter.COST_BULLET)
+
+        self._reload_magazine = self._propertyManager.get_parameter(
+            self.weapon, ObjectParameter.RECOVERY_MAGAZINE)
+
+        self._const_reload_weapon_time = self._propertyManager.get_parameter(
+            self.weapon, ObjectParameter.CONST_RELOAD_WEAPON_TIME)
+
+        self._firing_speed = self._propertyManager.get_parameter(
+            self.weapon, ObjectParameter.FIRING_SPEED)
+
+        # engine
+        self._reload_energy = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.RECOVERY_ENERGY)
+
+        self._consumption_energy = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.CONSUMPTION_ENERGY)
+
+        self._reset_engine = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.RESET_ENGINE)
+
+        self._const_recovery_engine_time = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.CONST_RECOVERY_ENGINE_TIME)
+
+        self._const_reset_engine_time = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.CONST_RESET_ENGINE_TIME)
+
+        self._const_rotate_factor = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.CONST_ROTATE_FACTOR)
+
+        self._const_rotate_step_factor = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.CONST_ROTATE_STEP_FACTOR)
+
+        self._max_speed = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.MAX_SPEED)
+
+        self._rotate_factor = self._const_rotate_factor
+
+        self.charge = self.magazine
+        self.starting_live = self.live
+        self.energy = self.power_bank
+        self.curr_speed = 0
+
+        self.key_handler = key.KeyStateHandler()
+        self._time_reload_weapon = 0
+        self._time_reload_engine = 0
+        self._time_last_shoot = 0
+        self._get_damage = 0
+        self._moving = False
+        self._bool_reset = False
+        self._reload_weapon = False
+
+    def getAmmo(self):
+        ammo = (self.charge/self.magazine) * 100
+        if ammo > 100:
+            ammo = 100
+        return int(ammo)
+
+    def getLive(self):
+        live = (self.live / float(self.starting_live)) * 100
+        if live > 100:
+            live = 100
+        return int(live)
+
+    def getEnergy(self):
+        energy = (self.energy / float(self.power_bank))
+        if energy > 1.0:
+            energy = 1.0
+        return energy
+
+    def reset(self):
+        self.live = self.starting_live
+        self.charge = self.magazine
+        self.energy = self.power_bank
+        self._get_damage = 0
+        self.velocity_x = 0
+        self.velocity_y = 0
+        self.velocity_angle = 0
+
+    def add_damage(self, value):
+        self._get_damage += value
+
+    def expens_energy(self, value):
+        self.energy -= value
+
+    def shoot(self, x, y, rotation):
+        if self._time_last_shoot <= 0 and self._reload_weapon is False:
+            if self.charge > self._cost_bullet:
+                self.charge -= self._cost_bullet
+                self._time_reload_weapon = self._const_reload_weapon_time
+                bullet = self.callbackShoot(x, y, rotation, self.weapon)
+                self._time_last_shoot = self._firing_speed
+                return bullet
+            else:
+                self._reload_weapon = True
+        return None
+
+    def process_live(self, dt):
+        self.live -= self._get_damage
+        self._get_damage = 0
+
+    def update(self, dt):
+        force_x = 0
+        force_y = 0
+        self.velocity_x -= self.velocity_x * self.resistance
+        self.velocity_y -= self.velocity_y * self.resistance
+
+        angle_radians = -math.radians(self.rotation)
+        if self.energy > 0:
+            if self.key_handler[key.W]:
+                force_y = self.thrust * dt * 1.0
+                self.expens_energy(dt*self._consumption_energy)
+                self._time_reload_engine = self._const_recovery_engine_time
+            elif self.key_handler[key.S]:
+                force_y = self.thrust * dt * -1.0
+                self.expens_energy(dt*self._consumption_energy)
+                self._time_reload_engine = self._const_recovery_engine_time
+            if self.key_handler[key.A]:
+                force_x = self.thrust * dt * -1.0
+                self.expens_energy(dt*self._consumption_energy)
+                self._time_reload_engine = self._const_recovery_engine_time
+            elif self.key_handler[key.D]:
+                force_x = self.thrust * dt * 1.0
+                self.expens_energy(dt*self._consumption_energy)
+                self._time_reload_engine = self._const_recovery_engine_time
+        else:
+            if self._bool_reset is False:
+                self._time_reload_engine = self._const_reset_engine_time
+                self._bool_reset = True
+
+        # print("self.curr_speed {} : self._max_speed {}".format( self.curr_speed, self._max_speed))
+        self.curr_speed = math.sqrt(
+            (self.velocity_x + force_x) * (self.velocity_x + force_x) +
+            (self.velocity_y + force_y) * (self.velocity_y + force_y))
+
+        # if math.fabs(self.velocity_x + force_x) < self._max_speed:
+        self.velocity_x += force_x
+        # if math.fabs(self.velocity_y + force_y) < self._max_speed:
+        self.velocity_y += force_y
+        # print("Speed: ", speed)
+        # self.velocity_x -= self.velocity_x * self.resistance
+        # self.velocity_y -= self.velocity_y * self.resistance
+
+        self.dx = self.velocity_x * dt
+        self.dy = self.velocity_y * dt
+        self.da = self.rotate_speed * dt + self.curr_speed * dt
+
+        if self._time_last_shoot > 0 :
+            self._time_last_shoot -= dt
+
+        if self._time_reload_engine < 0:
+            if self._bool_reset is True:
+                self.energy += self.power_bank * self._reset_engine
+                self._bool_reset = False
+            if self.energy < self.power_bank:
+                self.energy += dt * self._reload_energy
+        else:
+            self._time_reload_engine -= dt
+
+        if self._time_reload_weapon < 0:
+            self.reload(dt)
+        else:
+            self._time_reload_weapon -= dt
+
+    def reload(self, dt):
+        if self.charge < self.magazine:
+            self.charge += dt * self._reload_magazine
+        else:
+            self._reload_weapon = False
+
+    def is_live(self):
+        return self.live > 0
+
+class BugMechanics(BaseMechanics):
+
+    def __init__(self, property_manager):
+        self._propertyManager = property_manager
+        self._root = "bug"
+        super(BugMechanics, self).__init__(
+            resistance=self._propertyManager.get_parameter(self._root, ObjectParameter.RESISTANCE),
+            thrust=self._propertyManager.get_parameter(self._root, ObjectParameter.THRUST),
+            rotate_speed=self._propertyManager.get_parameter(self._root, ObjectParameter.ROTATE_SPEED),
+        )
+
+        self.live = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.LIVE)
+
+        self.power_bank = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.POWER_BANK)
+
+        self.weapon = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.WEAPON)
+
+        # weapon
+        self.magazine = self._propertyManager.get_parameter(
+            self.weapon, ObjectParameter.MAGAZINE)
+
+        self._cost_bullet = self._propertyManager.get_parameter(
+            self.weapon, ObjectParameter.COST_BULLET)
+
+        self._reload_magazine = self._propertyManager.get_parameter(
+            self.weapon, ObjectParameter.RECOVERY_MAGAZINE)
+
+        self._const_reload_weapon_time = self._propertyManager.get_parameter(
+            self.weapon, ObjectParameter.CONST_RELOAD_WEAPON_TIME)
+
+        # engine
+        self._reload_energy = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.RECOVERY_ENERGY)
+
+        self._consumption_energy = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.CONSUMPTION_ENERGY)
+
+        self._reset_engine = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.RESET_ENGINE)
+
+        self._const_recovery_engine_time = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.CONST_RECOVERY_ENGINE_TIME)
+
+        self._const_reset_engine_time = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.CONST_RESET_ENGINE_TIME)
+
+        self._const_rotate_factor = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.CONST_ROTATE_FACTOR)
+
+        self._const_rotate_step_factor = self._propertyManager.get_parameter(
+            self._root, ObjectParameter.CONST_ROTATE_STEP_FACTOR)
+
+        self._rotate_factor = self._const_rotate_factor
+
+        self.charge = self.magazine
+        self.starting_live = self.live
+        self.energy = self.power_bank
+
+        self.key_handler = key.KeyStateHandler()
+        self._time_reload_weapon = 0
+        self._time_reload_engine = 0
+        self._get_damage = 0
+        self._moving = False
+        self._bool_reset = False
+
+    def getAmmo(self):
+        ammo = (self.charge/self.magazine) * 100
+        if ammo > 100:
+            ammo = 100
+        return int(ammo)
+
+    def getLive(self):
+        live = (self.live / float(self.starting_live)) * 100
+        if live > 100:
+            live = 100
+        return int(live)
+
+    def getEnergy(self):
+        energy = (self.energy / float(self.power_bank))
+        if energy > 1.0:
+            energy = 1.0
+        return energy
+
+    def reset(self):
+        self.live = self.starting_live
+        self.charge = self.magazine
+        self.energy = self.power_bank
+        self._get_damage = 0
+        self.velocity_x = 0
+        self.velocity_y = 0
+        self.velocity_angle = 0
+
+    def add_damage(self, value):
+        self._get_damage += value
+
+    def expens_energy(self, value):
+        self.energy -= value
+
+    def shoot(self):
+        if self.charge > self._cost_bullet:
+            self.charge -= self._cost_bullet
+            self._time_reload_weapon = self._const_reload_weapon_time
+            return True
+        return False
+
+    def process_live(self, dt):
+        self.live -= self._get_damage
+        self._get_damage = 0
+
+    def update(self, dt):
+        force_x = 0
+        force_y = 0
+        if self.key_handler[key.LEFT]:
+            if self.energy <= 0:
+                self.velocity_angle = -self.rotate_speed * dt * self._rotate_factor * 0.5
+            else:
+                self.velocity_angle = -self.rotate_speed * dt * self._rotate_factor
+            if self._rotate_factor < 1.0:
+                self._rotate_factor += self._const_rotate_step_factor
+
+        elif self.key_handler[key.RIGHT]:
+            if self.energy <= 0:
+                self.velocity_angle = self.rotate_speed * dt * self._rotate_factor * 0.5
+            else:
+                self.velocity_angle = self.rotate_speed * dt * self._rotate_factor
+            if self._rotate_factor < 1.0:
+                self._rotate_factor += self._const_rotate_step_factor
+        else:
+            self.velocity_angle = 0
+            self._rotate_factor = self._const_rotate_factor
+
+        self.rotation += self.velocity_angle
+
+        angle_radians = -math.radians(self.rotation)
+
+        if self.energy > 0:
+            if self.key_handler[key.UP]:
+                force_x = math.cos(angle_radians) * self.thrust * dt
+                force_y = math.sin(angle_radians) * self.thrust * dt
+                self.velocity_x += force_x
+                self.velocity_y += force_y
+                self.expens_energy(dt*self._consumption_energy)
+                self._time_reload_engine = self._const_recovery_engine_time
+            elif self.key_handler[key.DOWN]:
+                force_x = math.cos(angle_radians) * self.thrust * dt
+                force_y = math.sin(angle_radians) * self.thrust * dt
+                self.velocity_x -= force_x
+                self.velocity_y -= force_y
+                self.expens_energy(dt * self._consumption_energy)
+                self._time_reload_engine = self._const_recovery_engine_time
+        else:
+            if self._bool_reset is False:
+                self._time_reload_engine = self._const_reset_engine_time
+                self._bool_reset = True
+
+        self.velocity_x -= self.velocity_x * self.resistance
+        self.velocity_y -= self.velocity_y * self.resistance
+
+        self.dx = self.velocity_x * dt
+        self.dy = self.velocity_y * dt
+        self.da = self.velocity_angle
+
 
         if self._time_reload_engine < 0:
             if self._bool_reset is True:

@@ -14,7 +14,7 @@ from Asteroid.common.Mechanics import *
 from Asteroid.GameMaster import *
 from Asteroid.common.ResourceManager import *
 import random
-
+from pyglet.window import mouse
 from GameMaster import TypeAsteroid
 
 
@@ -39,9 +39,8 @@ class GameScene(pyglet.window.Window):
         "".join((path_to_resource, "/Asteroids")),
         "".join((path_to_resource, "/Background")),
     ]
-
-    def __init__(self, width, height, DEBUG_MOD=False):
-        super(GameScene, self).__init__(width, height)
+    def __init__(self, width, height,  DEBUG_MOD=False):
+        super(GameScene, self).__init__(width, height, self.config)
         # self.window = pyglet.window.Window(width, height)
         self.pages = []
         self.labels = []
@@ -70,11 +69,15 @@ class GameScene(pyglet.window.Window):
         self.master.make_star(-50,-50, TypeAsteroid.BIG)
         self.master.make_star(-50,-50, TypeAsteroid.SMALL)
 
-
         ## USER SETTINGS
         self._score = 0
         self._bonus = 0
         self._ships = 4
+
+        self._shooted = False
+
+        self._mouse_x = 0
+        self._mouse_y = 0
 
         # star = self.master.make_star(100,100,None,100,10)
         # self.stars.append(star)
@@ -89,11 +92,11 @@ class GameScene(pyglet.window.Window):
         pass
 
     def generate_scene(self):
-        self.user_fighter = self.master.make_user_ship(
+        self.user_ship = self.master.make_user_ship(
             x=self._start_ship_position.x,
             y=self._start_ship_position.y)
-        self.push_handlers(self.user_fighter.mechanic.key_handler)
-        self.user_fighter.visible(False)
+        self.push_handlers(self.user_ship.mechanic.key_handler)
+        self.user_ship.visible(False)
         self.arrivalShip()
         self._background = self.master.createBackGround()
 
@@ -132,18 +135,41 @@ class GameScene(pyglet.window.Window):
     def add_bullet(self, bullet):
         self.bullets.append(bullet)
 
+    def calcRotate(self, pointa, pointb):
+        point =  pointa - pointb
+        return self._calc_rotate_null(point)
+
+    def _calc_rotate_null(self, point):
+        x, y = point.as_tuple()
+        # rx = 0  # math.degrees(math.atan2(y, z))
+        # ry = math.degrees(math.atan2(x, z))
+        rz = math.degrees(math.atan2(x, y)) + 90
+        print(rz)
+        return rz
+
     def on_mouse_press(self, x, y, button, modifiers):
         print("press ", x, y)
+        if button & mouse.LEFT:
+            if self.user_ship.getVisible() is True and self.master.type_user_ship == TypeShip.SAUCER:
+                self._shooted = True
+                self._mouse_x = x
+                self._mouse_y = y
+
+    def on_mouse_release(self, x , y, button, modifiers):
+        if button & mouse.LEFT:
+            self._shooted = False
+            # if self.user_ship.getVisible() is True and self.master.type_user_ship == TypeShip.SAUCER:
+
 
     def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.W:
-            if self.user_fighter.getVisible() is True:
-                if self.user_fighter.mechanic.shoot() is True:
+            if self.user_ship.getVisible() is True and self.master.type_user_ship != TypeShip.SAUCER:
+                if self.user_ship.mechanic.shoot() is True:
                     bullet = self.master.make_bullet(
-                        x=self.user_fighter.x,
-                        y=self.user_fighter.y,
-                        rotation=self.user_fighter.rotation,
-                        weapon=self.user_fighter.mechanic.weapon)
+                        x=self.user_ship.x,
+                        y=self.user_ship.y,
+                        rotation=self.user_ship.rotation,
+                        weapon=self.user_ship.mechanic.weapon)
                     self.add_bullet(bullet)
         elif symbol == pyglet.window.key.SPACE:
             self.usePortal()
@@ -162,8 +188,8 @@ class GameScene(pyglet.window.Window):
         self._bonus = 0
         self._ships = 4
 
-        self.user_fighter.visible(False)
-        self.del_item(self.user_fighter)
+        self.user_ship.visible(False)
+        self.del_item(self.user_ship)
 
         while self.items:
             item = self.items.pop()
@@ -174,7 +200,7 @@ class GameScene(pyglet.window.Window):
             bonus.destroy()
             del bonus
 
-        self.user_fighter.live = False
+        self.user_ship.live = False
         self.usePortal()
 
     def on_draw(self):
@@ -294,8 +320,8 @@ class GameScene(pyglet.window.Window):
         flag = False
         for obj in objects.copy():
             if obj.typeItem == TypeItem.ASTEROID:
-                if self.check_collision(self.user_fighter, obj) is True:
-                    self.user_fighter.mechanic.add_damage(value=obj.mechanic.damage)
+                if self.check_collision(self.user_ship, obj) is True:
+                    self.user_ship.mechanic.add_damage(value=obj.mechanic.damage)
                 for bullet in self.bullets:
                     if self.check_hit(bullet, obj) is True:
                         # obj.bounds.color = Color.Red
@@ -303,15 +329,15 @@ class GameScene(pyglet.window.Window):
                         bullet.mechanic.destroy()
 
         for star in self.stars:
-            if self.check_collision(self.user_fighter, star) is True:
+            if self.check_collision(self.user_ship, star) is True:
                 self._score += star.mechanic.bonus
                 star.mechanic.destroy()
                 star.mechanic.used = True
 
         if flag is True:
-            self.user_fighter.bounds.color = Color.Red
+            self.user_ship.bounds.color = Color.Red
         else:
-            self.user_fighter.bounds.color = Color.Green
+            self.user_ship.bounds.color = Color.Green
 
     def processing_objects(self, dt):
         '''
@@ -336,13 +362,21 @@ class GameScene(pyglet.window.Window):
                     del obj
                     obj = None
             else:
-                self.user_fighter.process(dt)
-                if self.user_fighter.live is False:
-                    self.user_fighter.visible(False)
+                self.user_ship.process(dt)
+                if self.user_ship.live is False:
+                    self.user_ship.visible(False)
                     self.master.play(
                         "ship_boom",
-                        self.user_fighter.sprite.x, self.user_fighter.sprite.y, group=self.loader.effects)
-                    self.del_item(self.user_fighter)
+                        self.user_ship.sprite.x, self.user_ship.sprite.y, group=self.loader.effects)
+                    self.del_item(self.user_ship)
+                if self._shooted is True:
+                    bullet = self.user_ship.mechanic.shoot(
+                        self.user_ship.x,
+                        self.user_ship.y,
+                        self.calcRotate(Point(self.user_ship.sprite.x, self.user_ship.sprite.y),
+                                        Point(self._mouse_x, self._mouse_y)))
+                    if bullet:
+                        self.add_bullet(bullet)
 
         for obj in self.bullets:
             obj.process(dt)
@@ -369,8 +403,8 @@ class GameScene(pyglet.window.Window):
 
     def processing_environment(self):
         self.master.user_ui.update_score(self._score)
-        self.master.user_ui.update_ammo(self.user_fighter.mechanic.getAmmo())
-        self.master.user_ui.update_energy(self.user_fighter.mechanic.getEnergy())
+        self.master.user_ui.update_ammo(self.user_ship.mechanic.getAmmo())
+        self.master.user_ui.update_energy(self.user_ship.mechanic.getEnergy())
         self.master.user_ui.update_live(self._ships)
 
 
@@ -398,25 +432,25 @@ class GameScene(pyglet.window.Window):
     def arrivalShip(self):
         self.master.play(
             "portal", self._start_ship_position.x, self._start_ship_position.y, group=self.loader.effects)
-        self.user_fighter.update_pos(
+        self.user_ship.update_pos(
             x=self._start_ship_position.x,
             y=self._start_ship_position.y,
         )
-        self.user_fighter.visible(True)
-        self.add_item(self.user_fighter)
+        self.user_ship.visible(True)
+        self.add_item(self.user_ship)
         self._ships -= 1
 
     def leavingShip(self):
         self.master.play(
-            "portal", self.user_fighter.sprite.x, self.user_fighter.sprite.y, group=self.loader.effects)
-        self.user_fighter.visible(False)
-        self.del_item(self.user_fighter)
+            "portal", self.user_ship.sprite.x, self.user_ship.sprite.y, group=self.loader.effects)
+        self.user_ship.visible(False)
+        self.del_item(self.user_ship)
         self._ships += 1
 
     def usePortal(self):
         if self._ships > 0:
-            if self.user_fighter.live is False:
-                self.user_fighter.reset()
+            if self.user_ship.live is False:
+                self.user_ship.reset()
                 self.arrivalShip()
 
 

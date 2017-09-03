@@ -14,6 +14,21 @@ class Triangle(object):
         self.vertex_list = pyglet.graphics.vertex_list(1024, 'v3f', 'c4B', 't2f', 'n3f')
 
 
+
+class MyWindows(pyglet.window.Window):
+
+    def __init__(self, *args, **kwargs):
+        super(MyWindows, self).__init__(*args, **kwargs)
+        # self.set_minimum_size(800, 600)
+        self.triangle = Triangle()
+        self.key_handler = key.KeyStateHandler()
+        # self.rectangle = Rectangle(-0.5, -0.5 , 1, 1, [0,200,0])
+        # gl.glClearColor(0.2, 0.3, 0.2, 1.0)
+        self.push_handlers(self.key_handler)
+        self.batch = pyglet.graphics.Batch()
+        x = 1.0
+        y = 1.0
+        x2 = 2.0
 # class Rectangle(object):
 #     def __init__(self, x1, y1, width, height, color):
 #         self.vertices = pyglet.graphics.vertex_list(4,
@@ -30,21 +45,6 @@ class Triangle(object):
             #     color[0], color[1], color[2]]
             #  ))
 #
-
-class MyWindows(pyglet.window.Window):
-
-    def __init__(self, *args, **kwargs):
-        super(MyWindows, self).__init__(*args, **kwargs)
-        # self.set_minimum_size(800, 600)
-        self.triangle = Triangle()
-        self.key_handler = key.KeyStateHandler()
-        # self.rectangle = Rectangle(-0.5, -0.5 , 1, 1, [0,200,0])
-        # gl.glClearColor(0.2, 0.3, 0.2, 1.0)
-        self.push_handlers(self.key_handler)
-        self.batch = pyglet.graphics.Batch()
-        x = 1.0
-        y = 1.0
-        x2 = 2.0
         y2 = 2.0
         width = 1
         height = 1

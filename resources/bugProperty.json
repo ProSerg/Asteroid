@@ -1,0 +1,22 @@
+{
+    "sprite": {
+        "file" : "bug.png",
+        "scale" : 0.1,
+        "rotation" : 90
+    },
+    "parameters": {
+        "resistance" : 0.015,
+        "rotateSpeed" : 220,
+        "thrust" : 400,
+        "live" : 1000,
+        "consumptionEnergy" : 26.0,
+        "powerBank" : 240,
+        "recoveryEnergy" : 15.0,
+        "constRecoveryEngineTime" : 2,
+        "constResetEngineTime" : 5,
+        "constRotateFactor" : 0.5,
+        "constRotateStepFactor" : 0.05,
+        "resetEngine" : 0.3,
+        "weapon" : "aBullet"
+    }
+}

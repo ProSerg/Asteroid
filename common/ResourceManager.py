@@ -36,6 +36,8 @@ class ObjectParameter(Enum):
     WEAPON = "weapon"
     COUNT_SPLINTERS = "countSplinters"
     BONUS = "bonus"
+    MAX_SPEED = "maxSpeed"
+    FIRING_SPEED = "firingSpeed"
 
 class JsonManager(object):
     def __init__(self, work_dir="."):

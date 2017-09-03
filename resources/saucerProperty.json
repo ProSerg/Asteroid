@@ -1,0 +1,23 @@
+{
+    "sprite": {
+        "file" : "saucer.png",
+        "scale" : 0.09,
+        "rotation" : 0.0
+    },
+    "parameters": {
+        "resistance" : 0.015,
+        "rotateSpeed" : 220,
+        "thrust" : 500,
+        "live" : 1000,
+        "consumptionEnergy" : 16.0,
+        "powerBank" : 460,
+        "recoveryEnergy" : 25.0,
+        "maxSpeed" : 400,
+        "constRecoveryEngineTime" : 2,
+        "constResetEngineTime" : 5,
+        "constRotateFactor" : 0.5,
+        "constRotateStepFactor" : 0.05,
+        "resetEngine" : 0.3,
+        "weapon" : "sBullet"
+    }
+}
