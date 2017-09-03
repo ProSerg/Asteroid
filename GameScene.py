@@ -293,7 +293,7 @@ class GameScene(pyglet.window.Window):
         #         self.check_collision(objects[i], objects[j])
         flag = False
         for obj in objects.copy():
-            if obj.name.find("Asteroid") != -1:
+            if obj.typeItem == TypeItem.ASTEROID:
                 if self.check_collision(self.user_fighter, obj) is True:
                     self.user_fighter.mechanic.add_damage(value=obj.mechanic.damage)
                 for bullet in self.bullets:
@@ -321,7 +321,7 @@ class GameScene(pyglet.window.Window):
         '''
         objects = self._get_objects()
         for obj in objects.copy():
-            if obj.name.find("Asteroid") > -1:
+            if obj.typeItem == TypeItem.ASTEROID:
                 obj.process(dt)
                 if obj.live is False:
                     self.master.play(
@@ -383,7 +383,7 @@ class GameScene(pyglet.window.Window):
 
     def clear_wave(self):
         for obj in self._get_objects():
-            if obj.name.find("Asteroid") != -1:
+            if obj.typeItem == TypeItem.ASTEROID:
                 obj.mechanic.live = 0
 
     def create_wave(self, numbers=7):

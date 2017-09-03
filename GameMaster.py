@@ -16,6 +16,14 @@ class TypeAsteroid(Enum):
     MEDIUM = "medium"
     SMALL = "small"
 
+
+class TypeItem(Enum):
+    USERSHIP = "userShip"
+    ASTEROID = "asteroid"
+    BONUS = "bonus"
+    BULLET = "bullet"
+    EFFECTS = "effect"
+
 class GameMaster(object):
     NUMS_ASTEROIDS = 10
 
@@ -133,7 +141,7 @@ class GameMaster(object):
             rotation=0.0,
             group=self._loader.background,
         )
-        return [fon1,fon2]
+        return [fon1, fon2]
 
     def generate_asteroid(self, name,  x, y):
         rotation = random.randint(0, 360)
@@ -178,6 +186,7 @@ class GameMaster(object):
             x=x,
             y=y,
             name=name,
+            type_item=TypeItem.ASTEROID,
             sprite=asteroid_sprite,
             rotation=rotation,
             mechanic=asteroid_mechanics,
@@ -204,6 +213,7 @@ class GameMaster(object):
             x=x,
             y=y,
             name="UserShip",
+            type_item=TypeItem.USERSHIP,
             sprite=sprite,
             rotation=self.propertyManager.get_sprite(root, SpriteParameter.ROTATION),
             mechanic=ship_mechanics,
@@ -269,6 +279,7 @@ class GameMaster(object):
             y=y - star_sprite.height/2,
             name="Star",
             sprite=star_sprite,
+            type_item=TypeItem.BONUS,
             rotation=0,
             mechanic=star_mechanics,
             bounds=Rectangle(width=star_sprite.width, height=star_sprite.height, rotation=0, color=Color.Green),
@@ -278,9 +289,9 @@ class GameMaster(object):
 
     def make_bullet(self, x, y, rotation, weapon):
         bullet_sprite = self.unit_manager.get_sprite(
-            name=self.propertyManager.get_sprite(weapon,SpriteParameter.FILENAME),
-            scale=self.propertyManager.get_sprite(weapon,SpriteParameter.SCALE),
-            rotation=self.propertyManager.get_sprite(weapon,SpriteParameter.ROTATION),
+            name=self.propertyManager.get_sprite(weapon, SpriteParameter.FILENAME),
+            scale=self.propertyManager.get_sprite(weapon, SpriteParameter.SCALE),
+            rotation=self.propertyManager.get_sprite(weapon, SpriteParameter.ROTATION),
             group=self._loader.effects,
         )
 
@@ -298,6 +309,7 @@ class GameMaster(object):
             local_x=15,
             local_y=0,
             name="bullet",
+            type_item=TypeItem.BULLET,
             sprite=bullet_sprite,
             rotation=rotation,
             mechanic=bullet_mechanics,

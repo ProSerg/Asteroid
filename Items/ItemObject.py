@@ -14,6 +14,7 @@ class ItemObject(object):
                  local_x=0,
                  local_y=0,
                  rotation=0,
+                 type_item=None,
                  static=False,
                  bounds=None,
                  childs=None,
@@ -21,6 +22,7 @@ class ItemObject(object):
                  sprite=None,
                  mechanic=None,
                  ):
+        self._type_item = type_item
         self._name = name
         self._x = x
         self._y = y
@@ -41,6 +43,15 @@ class ItemObject(object):
             self._childs = []
         self._parent = parent
         self._static = static
+
+    def _get_type_item(self):
+        return self._type_item
+
+    def _set_type_item(self, type_item):
+        self._type_item = type_item
+
+    typeItem = property(_get_type_item, _set_type_item, doc="""FIXME""")
+
 
     def _get_name(self):
         return self._name
