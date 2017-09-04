@@ -17,6 +17,6 @@
         "constRotateFactor" : 0.5,
         "constRotateStepFactor" : 0.05,
         "resetEngine" : 0.3,
-        "weapon" : "aBullet"
+        "weapon" : "wBullet"
     }
 }

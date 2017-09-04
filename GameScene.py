@@ -14,9 +14,7 @@ from Asteroid.common.Mechanics import *
 from Asteroid.GameMaster import *
 from Asteroid.common.ResourceManager import *
 import random
-from pyglet.window import mouse
 from GameMaster import TypeAsteroid
-
 
 class BatchOp(object):
     def __init__(self, name, status=True):
@@ -135,53 +133,30 @@ class GameScene(pyglet.window.Window):
     def add_bullet(self, bullet):
         self.bullets.append(bullet)
 
-    def calcRotate(self, pointa, pointb):
-        point =  pointa - pointb
-        return self._calc_rotate_null(point)
-
-    def _calc_rotate_null(self, point):
-        x, y = point.as_tuple()
-        # rx = 0  # math.degrees(math.atan2(y, z))
-        # ry = math.degrees(math.atan2(x, z))
-        rz = math.degrees(math.atan2(x, y)) + 90
-        print(rz)
-        return rz
-
     def on_mouse_press(self, x, y, button, modifiers):
         print("press ", x, y)
-        if button & mouse.LEFT:
-            if self.user_ship.getVisible() is True and self.master.type_user_ship == TypeShip.SAUCER:
-                self._shooted = True
-                self._mouse_x = x
-                self._mouse_y = y
+        if self.user_ship.getVisible() is True:
+            self.user_ship.mechanic.on_mouse_press(x, y, button, modifiers)
 
     def on_mouse_release(self, x , y, button, modifiers):
-        if button & mouse.LEFT:
-            self._shooted = False
-            # if self.user_ship.getVisible() is True and self.master.type_user_ship == TypeShip.SAUCER:
-
+        if self.user_ship.getVisible() is True:
+            self.user_ship.mechanic.on_mouse_release(x, y, button, modifiers)
 
     def on_key_press(self, symbol, modifiers):
-        if symbol == pyglet.window.key.W:
-            if self.user_ship.getVisible() is True and self.master.type_user_ship != TypeShip.SAUCER:
-                if self.user_ship.mechanic.shoot() is True:
-                    bullet = self.master.make_bullet(
-                        x=self.user_ship.x,
-                        y=self.user_ship.y,
-                        rotation=self.user_ship.rotation,
-                        weapon=self.user_ship.mechanic.weapon)
-                    self.add_bullet(bullet)
-        elif symbol == pyglet.window.key.SPACE:
+        if symbol == pyglet.window.key.SPACE:
             self.usePortal()
         elif symbol == pyglet.window.key.R:
+            self.usePortal()
             self.create_wave()
         elif symbol == pyglet.window.key.ESCAPE:
             # self.clear_wave()
             self.restartGame()
+        if self.user_ship.getVisible() is True:
+            self.user_ship.mechanic.on_key_press(symbol, modifiers)
 
     def on_key_release(self, symbol, modifiers):
-        if symbol == pyglet.window.key.W:
-            pass
+        if self.user_ship.getVisible() is True:
+            self.user_ship.mechanic.on_key_release(symbol, modifiers)
 
     def restartGame(self):
         self._score = 0
@@ -369,12 +344,10 @@ class GameScene(pyglet.window.Window):
                         "ship_boom",
                         self.user_ship.sprite.x, self.user_ship.sprite.y, group=self.loader.effects)
                     self.del_item(self.user_ship)
-                if self._shooted is True:
-                    bullet = self.user_ship.mechanic.shoot(
+                else:
+                    bullet = self.user_ship.mechanic.shot(
                         self.user_ship.x,
-                        self.user_ship.y,
-                        self.calcRotate(Point(self.user_ship.sprite.x, self.user_ship.sprite.y),
-                                        Point(self._mouse_x, self._mouse_y)))
+                        self.user_ship.y)
                     if bullet:
                         self.add_bullet(bullet)
 

@@ -1,6 +1,9 @@
+import pyglet
 import math
 from pyglet.window import key
 from Asteroid.common.ResourceManager import *
+from Asteroid.common.Point import *
+from pyglet.window import mouse
 
 class BaseMechanics(object):
     def __init__(self, resistance, rotate_speed, thrust):
@@ -58,6 +61,19 @@ class BaseMechanics(object):
 
     def get_slide(self):
         return self.dx, self.dy, self.da
+
+    #TODO
+    def on_mouse_press(self, x, y, button, modifiers):
+        pass
+
+    def on_mouse_release(self, x, y, button, modifiers):
+        pass
+
+    def on_key_press(self, symbol, modifiers):
+        pass
+
+    def on_key_release(self, symbol, modifiers):
+        pass
 
 
 class AsteroidMechanics(BaseMechanics):
@@ -146,8 +162,9 @@ class StarMechanics(BaseMechanics):
 
 class FighterMechanics(BaseMechanics):
 
-    def __init__(self, property_manager):
+    def __init__(self, property_manager, callbackShoot=None):
         self._propertyManager = property_manager
+        self.callbackShoot = callbackShoot
         self._root = "fighter"
         super(FighterMechanics, self).__init__(
             resistance=self._propertyManager.get_parameter(self._root, ObjectParameter.RESISTANCE),
@@ -176,6 +193,9 @@ class FighterMechanics(BaseMechanics):
 
         self._const_reload_weapon_time = self._propertyManager.get_parameter(
             self.weapon, ObjectParameter.CONST_RELOAD_WEAPON_TIME)
+
+        self._firing_speed = self._propertyManager.get_parameter(
+            self.weapon, ObjectParameter.FIRING_SPEED)
 
         # engine
         self._reload_energy = self._propertyManager.get_parameter(
@@ -211,6 +231,8 @@ class FighterMechanics(BaseMechanics):
         self._get_damage = 0
         self._moving = False
         self._bool_reset = False
+        self._shot = False
+
 
     def getAmmo(self):
         ammo = (self.charge/self.magazine) * 100
@@ -245,13 +267,29 @@ class FighterMechanics(BaseMechanics):
     def expens_energy(self, value):
         self.energy -= value
 
-    def shoot(self):
-        if self.charge > self._cost_bullet:
-            self.charge -= self._cost_bullet
-            self._time_reload_weapon = self._const_reload_weapon_time
+    def on_mouse_press(self, x, y, symbol, modifiers):
+        pass
 
-            return True
-        return False
+    def on_mouse_release(self, x, y, button, modifiers):
+        pass
+
+    def on_key_press(self, symbol, modifiers):
+        if symbol == pyglet.window.key.W:
+            self._shot = True
+
+    def on_key_release(self, symbol, modifiers):
+        if symbol == pyglet.window.key.W:
+            self._shot = False
+
+    def shot(self, x, y):
+        if self._shot is True:
+            self._shot = False
+            if self.charge > self._cost_bullet:
+                self.charge -= self._cost_bullet
+                self._time_reload_weapon = self._const_reload_weapon_time
+                bullet = self.callbackShoot(x, y, self.rotation, self.weapon)
+                return bullet
+        return None
 
     def process_live(self, dt):
         self.live -= self._get_damage
@@ -401,6 +439,9 @@ class SaucerMechanics(BaseMechanics):
         self._moving = False
         self._bool_reset = False
         self._reload_weapon = False
+        self._mouse_x = 0
+        self._mouse_y = 0
+        self._shot = False
 
     def getAmmo(self):
         ammo = (self.charge/self.magazine) * 100
@@ -420,6 +461,17 @@ class SaucerMechanics(BaseMechanics):
             energy = 1.0
         return energy
 
+    def calcRotate(self, pointa, pointb):
+        point =  pointa - pointb
+        return self._calc_rotate_null(point)
+
+    def _calc_rotate_null(self, point):
+        x, y = point.as_tuple()
+        # rx = 0  # math.degrees(math.atan2(y, z))
+        # ry = math.degrees(math.atan2(x, z))
+        rz = math.degrees(math.atan2(x, y)) + 90
+        return rz
+
     def reset(self):
         self.live = self.starting_live
         self.charge = self.magazine
@@ -435,16 +487,34 @@ class SaucerMechanics(BaseMechanics):
     def expens_energy(self, value):
         self.energy -= value
 
-    def shoot(self, x, y, rotation):
-        if self._time_last_shoot <= 0 and self._reload_weapon is False:
-            if self.charge > self._cost_bullet:
-                self.charge -= self._cost_bullet
-                self._time_reload_weapon = self._const_reload_weapon_time
-                bullet = self.callbackShoot(x, y, rotation, self.weapon)
-                self._time_last_shoot = self._firing_speed
-                return bullet
-            else:
-                self._reload_weapon = True
+    def on_mouse_press(self, x, y, button, modifiers):
+        if button & mouse.LEFT:
+            self._shot = True
+            self._mouse_y = y
+            self._mouse_x = x
+
+    def on_mouse_release(self, x, y, button, modifiers):
+        if button & mouse.LEFT:
+            self._shot = False
+
+    def on_key_press(self, symbol, modifiers):
+        pass
+
+    def on_key_release(self, symbol, modifiers):
+        pass
+
+    def shot(self, x, y):
+        if self._shot is True:
+            if self._time_last_shoot <= 0 and self._reload_weapon is False:
+                if self.charge > self._cost_bullet:
+                    self.charge -= self._cost_bullet
+                    self._time_reload_weapon = self._const_reload_weapon_time
+                    rotation = self.calcRotate(Point(x,y), Point(self._mouse_x, self._mouse_y))
+                    bullet = self.callbackShoot(x, y, rotation, self.weapon)
+                    self._time_last_shoot = self._firing_speed
+                    return bullet
+                else:
+                    self._reload_weapon = True
         return None
 
     def process_live(self, dt):
@@ -525,8 +595,9 @@ class SaucerMechanics(BaseMechanics):
 
 class BugMechanics(BaseMechanics):
 
-    def __init__(self, property_manager):
+    def __init__(self, property_manager, callbackShoot=None):
         self._propertyManager = property_manager
+        self.callbackShoot = callbackShoot
         self._root = "bug"
         super(BugMechanics, self).__init__(
             resistance=self._propertyManager.get_parameter(self._root, ObjectParameter.RESISTANCE),
@@ -556,6 +627,9 @@ class BugMechanics(BaseMechanics):
         self._const_reload_weapon_time = self._propertyManager.get_parameter(
             self.weapon, ObjectParameter.CONST_RELOAD_WEAPON_TIME)
 
+        self._firing_speed = self._propertyManager.get_parameter(
+            self.weapon, ObjectParameter.FIRING_SPEED)
+
         # engine
         self._reload_energy = self._propertyManager.get_parameter(
             self._root, ObjectParameter.RECOVERY_ENERGY)
@@ -580,7 +654,7 @@ class BugMechanics(BaseMechanics):
 
         self._rotate_factor = self._const_rotate_factor
 
-        self.charge = self.magazine
+        self.charge = 0
         self.starting_live = self.live
         self.energy = self.power_bank
 
@@ -590,6 +664,8 @@ class BugMechanics(BaseMechanics):
         self._get_damage = 0
         self._moving = False
         self._bool_reset = False
+        self._shot = False
+        self._up_weapon = False
 
     def getAmmo(self):
         ammo = (self.charge/self.magazine) * 100
@@ -624,12 +700,33 @@ class BugMechanics(BaseMechanics):
     def expens_energy(self, value):
         self.energy -= value
 
-    def shoot(self):
-        if self.charge > self._cost_bullet:
-            self.charge -= self._cost_bullet
-            self._time_reload_weapon = self._const_reload_weapon_time
-            return True
-        return False
+    def on_mouse_press(self, x, y, symbol, modifiers):
+        pass
+
+    def on_mouse_release(self, x, y, button, modifiers):
+        pass
+
+    def on_key_press(self, symbol, modifiers):
+        if symbol == pyglet.window.key.W:
+            self._shot = False
+            self._up_weapon = True
+
+    def on_key_release(self, symbol, modifiers):
+        if symbol == pyglet.window.key.W:
+            self._shot = True
+            self._up_weapon = False
+
+    def shot(self, x, y):
+        if self._shot is True:
+            self._shot = False
+            self._up_weapon = False
+            if self.charge > self._cost_bullet:
+                self._time_reload_weapon = self._const_reload_weapon_time
+                bullet = self.callbackShoot(x, y, self.rotation, self.weapon)
+                bullet.mechanic.damage *= self.charge/self._cost_bullet
+                self.charge = 0
+                return bullet
+        return None
 
     def process_live(self, dt):
         self.live -= self._get_damage
@@ -698,10 +795,8 @@ class BugMechanics(BaseMechanics):
         else:
             self._time_reload_engine -= dt
 
-        if self._time_reload_weapon < 0:
+        if self._up_weapon is True:
             self.reload(dt)
-        else:
-            self._time_reload_weapon -= dt
 
     def reload(self, dt):
         if self.charge < self.magazine:

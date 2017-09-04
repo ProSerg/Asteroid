@@ -35,7 +35,7 @@ class GameMaster(object):
     def __init__(self, loader, batch):
         self._loader = loader
         self.batch = batch
-        self.type_user_ship = TypeShip.SAUCER
+        self.type_user_ship = TypeShip.BUG
 
         self.jsonManager = JsonManager()
         self.jsonManager.addJsonData("fighter", "resources\\fighterProperty.json")
@@ -46,6 +46,7 @@ class GameMaster(object):
         self.jsonManager.addJsonData("bigAsteroid",    "resources\\bigAsteroidProperty.json")
         self.jsonManager.addJsonData("aBullet",        "resources\\aBullet.json")
         self.jsonManager.addJsonData("sBullet",        "resources\\sBullet.json")
+        self.jsonManager.addJsonData("wBullet",        "resources\\wBullet.json")
         self.jsonManager.addJsonData("smallStar", "resources\\smallStarProperty.json")
         self.jsonManager.addJsonData("mediumStar", "resources\\mediumStarProperty.json")
         self.jsonManager.addJsonData("bigStar", "resources\\bigStarProperty.json")
@@ -219,10 +220,12 @@ class GameMaster(object):
         if self.type_user_ship == TypeShip.FIGHTER:
             ship_mechanics = FighterMechanics(
                 property_manager=self.propertyManager,
+                callbackShoot=self.make_bullet
             )
         elif self.type_user_ship == TypeShip.BUG:
             ship_mechanics = BugMechanics(
                 property_manager=self.propertyManager,
+                callbackShoot=self.make_bullet
             )
         elif self.type_user_ship == TypeShip.SAUCER:
             ship_mechanics = SaucerMechanics(
