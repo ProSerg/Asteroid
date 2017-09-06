@@ -7,13 +7,13 @@
     "parameters": {
         "resistance" : 0.0,
         "rotateSpeed" : 2.0,
-        "thrust" : 700,
-        "damage" : 120,
-        "energy" : 450,
-        "magazine" : 4.0,
+        "thrust" : 500,
+        "damage" : 200,
+        "energy" : 700,
+        "magazine" : 7.0,
         "costBullet" : 1.0,
         "recoveryMagazine" : 3.0,
-        "constReloadWeaponTime"  : 0.5,
-        "firingSpeed" : 0.1
+        "constReloadWeaponTime"  : 2,
+        "firingSpeed" : 0.0
     }
 }

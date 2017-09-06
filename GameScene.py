@@ -131,7 +131,10 @@ class GameScene(pyglet.window.Window):
         self.items.add(item)
 
     def add_bullet(self, bullet):
-        self.bullets.append(bullet)
+        if type(bullet) is list:
+            self.bullets.extend(bullet)
+        else:
+            self.bullets.append(bullet)
 
     def on_mouse_press(self, x, y, button, modifiers):
         print("press ", x, y)
@@ -141,6 +144,14 @@ class GameScene(pyglet.window.Window):
     def on_mouse_release(self, x , y, button, modifiers):
         if self.user_ship.getVisible() is True:
             self.user_ship.mechanic.on_mouse_release(x, y, button, modifiers)
+
+    def on_mouse_motion(self, x, y, dx, dy):
+        if self.user_ship.getVisible() is True:
+            self.user_ship.mechanic.on_mouse_motion(x, y, dx, dy)
+
+    def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
+        if self.user_ship.getVisible() is True:
+            self.user_ship.mechanic.on_mouse_drag(x, y, dx, dy, buttons, modifiers)
 
     def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.SPACE:
@@ -300,8 +311,9 @@ class GameScene(pyglet.window.Window):
                 for bullet in self.bullets:
                     if self.check_hit(bullet, obj) is True:
                         # obj.bounds.color = Color.Red
-                        obj.mechanic.add_damage(value=bullet.mechanic.damage)
-                        bullet.mechanic.destroy()
+                        if obj.mechanic.live > 0:
+                            obj.mechanic.add_damage(value=bullet.mechanic.damage)
+                            bullet.mechanic.destroy()
 
         for star in self.stars:
             if self.check_collision(self.user_ship, star) is True:
@@ -382,8 +394,8 @@ class GameScene(pyglet.window.Window):
 
 
     def update(self, dt):
-        self.processing_collisions()
         self.moving(dt)
+        self.processing_collisions()
         self.processing_objects(dt)
         self.processing_environment()
 

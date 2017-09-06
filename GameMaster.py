@@ -35,7 +35,7 @@ class GameMaster(object):
     def __init__(self, loader, batch):
         self._loader = loader
         self.batch = batch
-        self.type_user_ship = TypeShip.BUG
+        self.type_user_ship = TypeShip.SAUCER
 
         self.jsonManager = JsonManager()
         self.jsonManager.addJsonData("fighter", "resources\\fighterProperty.json")
