@@ -20,25 +20,29 @@ class UserUI(object):
             text='Score: 0',
             x=50, y=575,
             anchor_x='center',
-            batch=self._batch)
+            batch=self._batch,
+            group=group)
 
         self._ammo = pyglet.text.Label(
             text='Ammo: 100 %',
             x=20, y=30,
             anchor_x='left',
-            batch=self._batch)
+            batch=self._batch,
+            group=group)
 
         self._energy = pyglet.text.Label(
             text='Energy: 100 %',
             x=600, y=30,
             anchor_x='left',
-            batch=self._batch)
+            batch=self._batch,
+            group=group)
 
         self._live = pyglet.text.Label(
             text='x 0',
             x=750, y=570,
             anchor_x='left',
-            batch=self._batch)
+            batch=self._batch,
+            group=group)
 
         self.ship.x = 730
         self.ship.y = 578
@@ -59,7 +63,8 @@ class UserUI(object):
             text="Asteroids",
             x=400, y=575,
             anchor_x='center',
-            batch=self._batch))
+            batch=self._batch,
+            group=group))
 
     def textProgress(selp, procent,  prefix='', suffix='', decimals=1, length=15, fill='='):
         """

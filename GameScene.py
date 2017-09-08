@@ -27,6 +27,7 @@ class GameScene(pyglet.window.Window):
     __BATCH_MAIN_NAME__ = "main_batch"
     path_to_resource = "../resources/"
     resource_paths = [
+        "".join((path_to_resource, "/")),
         "".join((path_to_resource, "/Blue")),
         "".join((path_to_resource, "/Effects/Blue Effects")),
         "".join((path_to_resource, "/Effects/Galaxy")),
@@ -76,6 +77,14 @@ class GameScene(pyglet.window.Window):
 
         self._mouse_x = 0
         self._mouse_y = 0
+
+        # mouse
+        if self.master.type_user_ship == TypeShip.SAUCER:
+            self.set_mouse_visible(True)
+            image = self.loader.create_image('cross_blue.png', anchor="center")
+            cursor = pyglet.window.ImageMouseCursor(image, 0, 0)
+            self.set_mouse_cursor(cursor)
+        #
 
         # star = self.master.make_star(100,100,None,100,10)
         # self.stars.append(star)

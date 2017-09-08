@@ -35,7 +35,7 @@ class GameMaster(object):
     def __init__(self, loader, batch):
         self._loader = loader
         self.batch = batch
-        self.type_user_ship = TypeShip.SAUCER
+        self.type_user_ship = TypeShip.BUG
 
         self.jsonManager = JsonManager()
         self.jsonManager.addJsonData("fighter", "resources\\fighterProperty.json")
@@ -313,10 +313,10 @@ class GameMaster(object):
 
         return star
 
-    def make_bullet(self, x, y, rotation, weapon):
+    def make_bullet(self, x, y, rotation, weapon, scale=1.0):
         bullet_sprite = self.unit_manager.get_sprite(
             name=self.propertyManager.get_sprite(weapon, SpriteParameter.FILENAME),
-            scale=self.propertyManager.get_sprite(weapon, SpriteParameter.SCALE),
+            scale=self.propertyManager.get_sprite(weapon, SpriteParameter.SCALE)*scale,
             rotation=self.propertyManager.get_sprite(weapon, SpriteParameter.ROTATION),
             group=self._loader.effects,
         )
