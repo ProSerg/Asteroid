@@ -75,6 +75,8 @@ class BaseMechanics(object):
     def on_key_release(self, symbol, modifiers):
         pass
 
+    def on_mouse_motion(self, x, y, dx, dy):
+        pass
 
 class AsteroidMechanics(BaseMechanics):
     def __init__(self, name, type_asteroid, property_manager):
@@ -92,7 +94,8 @@ class AsteroidMechanics(BaseMechanics):
         self._get_damage = 0
 
     def add_damage(self, value):
-        self._get_damage += value
+        # self._get_damage += value
+        self.live -= value
 
     def process_live(self, dt):
         self.live -= self._get_damage
@@ -480,6 +483,8 @@ class SaucerMechanics(BaseMechanics):
         self.velocity_x = 0
         self.velocity_y = 0
         self.velocity_angle = 0
+        self._shot = False
+
 
     def add_damage(self, value):
         self._get_damage += value
@@ -490,8 +495,6 @@ class SaucerMechanics(BaseMechanics):
     def on_mouse_press(self, x, y, button, modifiers):
         if button & mouse.LEFT:
             self._shot = True
-            self._mouse_y = y
-            self._mouse_x = x
 
     def on_mouse_release(self, x, y, button, modifiers):
         if button & mouse.LEFT:
@@ -502,6 +505,17 @@ class SaucerMechanics(BaseMechanics):
 
     def on_key_release(self, symbol, modifiers):
         pass
+
+    def on_mouse_motion(self, x, y, dx, dy):
+        self._mouse_y = y
+        self._mouse_x = x
+        # print("Mouse: {}{}".format(self._mouse_x, self._mouse_y))
+
+    def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
+        self._mouse_y = y
+        self._mouse_x = x
+        print("Mouse: {}{}".format(self._mouse_x, self._mouse_y))
+
 
     def shot(self, x, y):
         if self._shot is True:
@@ -687,7 +701,7 @@ class BugMechanics(BaseMechanics):
 
     def reset(self):
         self.live = self.starting_live
-        self.charge = self.magazine
+        self.charge = 0
         self.energy = self.power_bank
         self._get_damage = 0
         self.velocity_x = 0
@@ -722,10 +736,13 @@ class BugMechanics(BaseMechanics):
             self._up_weapon = False
             if self.charge > self._cost_bullet:
                 self._time_reload_weapon = self._const_reload_weapon_time
-                bullet = self.callbackShoot(x, y, self.rotation, self.weapon)
-                bullet.mechanic.damage *= self.charge/self._cost_bullet
+                bullets = []
+                for idx in range(int(self.charge/self._cost_bullet)):
+                    bullet = self.callbackShoot(x, y, self.rotation, self.weapon, int(self.charge/self._cost_bullet))
+                    bullets.append(bullet)
+                # bullet.mechanic.damage *= self.charge/self._cost_bullet
                 self.charge = 0
-                return bullet
+                return bullets
         return None
 
     def process_live(self, dt):
