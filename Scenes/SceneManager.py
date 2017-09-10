@@ -62,8 +62,7 @@ class SceneManager(object):
         self.scenes = scenes
 
         self.window = pyglet.window.Window(width=width, height=height, caption=title)
-        self.key_handler = key.KeyStateHandler()
-        self.window.push_handlers(self.key_handler)
+        # self.window.push_handlers(self.key_handler)
 
         self.create_batch(self.__BATCH_MAIN_NAME__)
         self.set_main_batch(self.__BATCH_MAIN_NAME__)
@@ -71,7 +70,7 @@ class SceneManager(object):
         self.loader = ResourcesLoader()
         self.master = GameMaster(loader=self.loader)
         for idx, item in scenes.items():
-            item.init(self.master, self.key_handler, self.window.width, self.window.height)
+            item.init(self.master, self.window.width, self.window.height)
 
         pyglet.clock.schedule_interval(self.on_step, 1.0 / fps)
 
@@ -176,7 +175,6 @@ class SceneManager(object):
         @self.window.event
         def on_text_motion_select(motion):
             self.scenes[self.current].on_text_motion_select(self, motion)
-
 
 
 class Scene(object):

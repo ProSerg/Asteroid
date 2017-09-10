@@ -23,8 +23,8 @@ class MenuScene(Scene):
             3: TypeShip.SAUCER,
         }
 
-    def init(self, master, key_handler,  width, height):
-        self.key_handler = key_handler
+    def init(self, master, width, height):
+        self.key_handler = key.KeyStateHandler()
         # background = pyglet.graphics.OrderedGroup(0)
         self.width = width
         self.height = height
@@ -68,7 +68,7 @@ class MenuScene(Scene):
 
     def on_step(self, app, dt):
         # print("Step: {}".format(dt))
-        pass
+         pass
 
     def on_draw(self, manager):
         super().on_draw(manager)

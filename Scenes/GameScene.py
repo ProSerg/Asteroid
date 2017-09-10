@@ -5,8 +5,8 @@ class GameScene(Scene):
         super().__init__()
         # self._batch = batch
 
-    def init(self, master, key_handler,  width, height):
-        self.key_handler = key_handler
+    def init(self, master, width, height):
+        self.key_handler = key.KeyStateHandler()
         # background = pyglet.graphics.OrderedGroup(0)
         self.width = width
         self.height = height
@@ -31,6 +31,10 @@ class GameScene(Scene):
 
         self.user_ui = self.master.make_game_ui(
             self.batch)
+
+        self.master.make_star(-50, -50, self.batch, TypeAsteroid.MEDIUM)
+        self.master.make_star(-50, -50, self.batch, TypeAsteroid.BIG)
+        self.master.make_star(-50, -50, self.batch, TypeAsteroid.SMALL)
 
     def arrivalShip(self):
         self.master.play(
@@ -244,10 +248,14 @@ class GameScene(Scene):
                         "asteroid_boom",
                         obj.sprite.x, obj.sprite.y,
                         batch=self.batch, group=self.loader.effects)
-                    splinters = self.master.generate_splinters(obj)
+                    splinters = self.master.generate_splinters(obj, self.batch)
                     for item in splinters:
                         self.add_item(item)
-                    self.stars.append(self.master.make_star(obj.sprite.x, obj.sprite.y, obj.mechanic.typeAsteroid))
+                    self.stars.append(self.master.make_star(
+                        x=obj.sprite.x,
+                        y=obj.sprite.y,
+                        batch=self.batch,
+                        type=obj.mechanic.typeAsteroid))
                     self.del_item(obj)
                     obj.destroy()
                     del obj
@@ -264,7 +272,8 @@ class GameScene(Scene):
                 else:
                     bullet = self.user_ship.mechanic.shot(
                         self.user_ship.x,
-                        self.user_ship.y)
+                        self.user_ship.y,
+                        self.batch)
                     if bullet:
                         self.add_bullet(bullet)
 
@@ -322,6 +331,8 @@ class GameScene(Scene):
             self.user_ship.mechanic.on_mouse_drag(x, y, dx, dy, buttons, modifiers)
 
     def on_key_press(self, app, symbol, modifiers):
+        self.key_handler.on_key_press(symbol, modifiers)
+
         if symbol == pyglet.window.key.SPACE:
             self.usePortal()
         elif symbol == pyglet.window.key.R:
@@ -331,10 +342,13 @@ class GameScene(Scene):
             # self.clear_wave()
             # self.restartGame()
             pass
+
         if self.user_ship.getVisible() is True:
             self.user_ship.mechanic.on_key_press(symbol, modifiers)
 
     def on_key_release(self, app, symbol, modifiers):
+        self.key_handler.on_key_release(symbol, modifiers)
+
         if symbol == pyglet.window.key.F10:
             self.restartGame()
             self._status = "menu"
