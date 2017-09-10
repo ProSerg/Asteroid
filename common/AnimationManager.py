@@ -47,13 +47,12 @@ class AnimationSprite(pyglet.sprite.Sprite):
 
 
 class AnimationManager(object):
-    def __init__(self, loader, batch):
+    def __init__(self, loader):
         self.loader = loader
-        self._buffer_springs_effects={}
+        self._buffer_springs_effects = {}
         self._animations = []
-        self._batch = batch
 
-    def getSpringEffect(self, img, type_image, group, rotation, scale, **kwargs):
+    def getSpringEffect(self, img, type_image, batch, group, rotation, scale, **kwargs):
         if type_image == "grid":
             frames = self.loader.create_animation_by_grids(img,
                 duration=kwargs["duration"],
@@ -73,7 +72,7 @@ class AnimationManager(object):
                     scale=scale,
                     rotation=rotation,
                     calldelete=None,
-                    batch=self._batch,
+                    batch=batch,
                     group=group)
         else:
             return None
@@ -123,21 +122,21 @@ class AnimationManager(object):
         for item in self._animations:
             item.draw()
 
-    def playAnimation(self, name,  x=0, y=0, rotation=0, looped=False, group=None):
+    def playAnimation(self, name,  x=0, y=0, rotation=0, looped=False, batch=None, group=None):
         animation = AnimationSprite(self._buffer_springs_effects.get(name).get("frames"),
                                     scale=self._buffer_springs_effects.get(name).get("scale"),
                                     looped=looped, calldelete=self.deleteAnimation, rotation=rotation,
-                                    batch=self._batch, group=group)
-        # animation.set_position(x - animation.width/2, y - animation.height/2)
+                                    batch=batch, group=group)
+        # animation.set_position(x - animation.width/2, y -  animation.height/2)
         # animation.set_position(x - animation.width/2, y - animation.height/2)
         animation.set_position(x - animation.width/2, y - animation.height/2)
         self._animations.append(animation)
 
-    def createAnimation(self, name,  x=0, y=0, rotation=0, looped=False, group=None):
+    def createAnimation(self, name,  x=0, y=0, rotation=0, looped=False, batch=None, group=None):
         animation = AnimationSprite(self._buffer_springs_effects.get(name).get("frames"),
                                     scale=self._buffer_springs_effects.get(name).get("scale"),
                                     looped=looped, calldelete=None, rotation=rotation,
-                                    batch=self._batch, group=group)
+                                    batch=batch, group=group)
         # animation.set_position(x - animation.width/2, y - animation.height/2)
         animation.set_position(x - animation.width/2, y - animation.height/2)
         return animation

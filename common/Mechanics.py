@@ -124,7 +124,7 @@ class BulletMechanics(BaseMechanics):
         self.boom = False
         self.energy = self._propertyManager.get_parameter(self._root, ObjectParameter.ENERGY)
         self.damage = self._propertyManager.get_parameter(self._root, ObjectParameter.DAMAGE)
-        self.key_handler = key.KeyStateHandler()
+        # self.key_handler = key.KeyStateHandler()
 
     def destroy(self):
         self.boom = True
@@ -165,7 +165,7 @@ class StarMechanics(BaseMechanics):
 
 class FighterMechanics(BaseMechanics):
 
-    def __init__(self, property_manager, callbackShoot=None):
+    def __init__(self, property_manager, key_handler, callbackShoot=None):
         self._propertyManager = property_manager
         self.callbackShoot = callbackShoot
         self._root = "fighter"
@@ -228,7 +228,12 @@ class FighterMechanics(BaseMechanics):
         self.starting_live = self.live
         self.energy = self.power_bank
 
-        self.key_handler = key.KeyStateHandler()
+        self.key_handler = {
+            key.UP : False,
+            key.DOWN : False,
+            key.LEFT : False,
+            key.RIGHT : False,
+        }
         self._time_reload_weapon = 0
         self._time_reload_engine = 0
         self._get_damage = 0
@@ -280,9 +285,39 @@ class FighterMechanics(BaseMechanics):
         if symbol == pyglet.window.key.W:
             self._shot = True
 
+        for _key in self.key_handler.keys():
+            self.key_handler[_key] = False
+
+        if symbol == pyglet.window.key.LEFT:
+            self.key_handler[key.LEFT] = True
+
+        if symbol == pyglet.window.key.RIGHT:
+            self.key_handler[key.RIGHT] = True
+
+        if symbol == pyglet.window.key.UP:
+            self.key_handler[key.UP] = True
+
+        if symbol == pyglet.window.key.DOWN:
+            self.key_handler[key.DOWN] = True
+
+
+
+
     def on_key_release(self, symbol, modifiers):
         if symbol == pyglet.window.key.W:
             self._shot = False
+
+        if symbol == pyglet.window.key.LEFT:
+            self.key_handler[key.LEFT] = False
+
+        if symbol == pyglet.window.key.RIGHT:
+            self.key_handler[key.RIGHT] = False
+
+        if symbol == pyglet.window.key.UP:
+            self.key_handler[key.UP] = False
+
+        if symbol == pyglet.window.key.DOWN:
+            self.key_handler[key.DOWN] = False
 
     def shot(self, x, y):
         if self._shot is True:
@@ -301,6 +336,7 @@ class FighterMechanics(BaseMechanics):
     def update(self, dt):
         force_x = 0
         force_y = 0
+
         if self.key_handler[key.LEFT]:
             if self.energy <= 0:
                 self.velocity_angle = -self.rotate_speed * dt * self._rotate_factor * 0.5
@@ -367,7 +403,7 @@ class FighterMechanics(BaseMechanics):
 
 class SaucerMechanics(BaseMechanics):
 
-    def __init__(self, property_manager, callbackShoot=None):
+    def __init__(self, property_manager, key_handler, callbackShoot=None):
         self._propertyManager = property_manager
         self._root = "saucer"
         self.callbackShoot = callbackShoot
@@ -434,7 +470,7 @@ class SaucerMechanics(BaseMechanics):
         self.energy = self.power_bank
         self.curr_speed = 0
 
-        self.key_handler = key.KeyStateHandler()
+        self.key_handler = key_handler
         self._time_reload_weapon = 0
         self._time_reload_engine = 0
         self._time_last_shoot = 0
@@ -609,7 +645,7 @@ class SaucerMechanics(BaseMechanics):
 
 class BugMechanics(BaseMechanics):
 
-    def __init__(self, property_manager, callbackShoot=None):
+    def __init__(self, property_manager, key_handler, callbackShoot=None):
         self._propertyManager = property_manager
         self.callbackShoot = callbackShoot
         self._root = "bug"
@@ -672,7 +708,7 @@ class BugMechanics(BaseMechanics):
         self.starting_live = self.live
         self.energy = self.power_bank
 
-        self.key_handler = key.KeyStateHandler()
+        self.key_handler = key_handler
         self._time_reload_weapon = 0
         self._time_reload_engine = 0
         self._get_damage = 0

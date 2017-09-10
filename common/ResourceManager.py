@@ -42,9 +42,8 @@ class ObjectParameter(Enum):
 class JsonManager(object):
     def __init__(self, work_dir="."):
         self._db = {}
-        self._work_dir = os.path.abspath(os.path.dirname(work_dir))
+        self._work_dir = work_dir
         self._data = None
-        print(self._work_dir)
 
     def addJsonData(self, name,  file):
         try:

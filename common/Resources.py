@@ -2,6 +2,8 @@ import pyglet
 from pyglet.image import Animation, AnimationFrame
 from pyglet.resource import Loader
 
+from .ResourceManager import *
+import os
 
 class ResourcesLoader(Loader):
     background = pyglet.graphics.OrderedGroup(0)
@@ -10,11 +12,49 @@ class ResourcesLoader(Loader):
     asteroids_group = pyglet.graphics.OrderedGroup(3)
     effects = pyglet.graphics.OrderedGroup(4)
     ui = pyglet.graphics.OrderedGroup(5)
+    dir_path = os.path.dirname(os.path.realpath(__file__))
 
-    def __init__(self, resource_paths):
-        self.resource_paths = resource_paths
+    path_to_resource = "%s\\..\\..\\resources\\" % dir_path
+    resource_paths = [
+        os.path.realpath("".join((path_to_resource, "/"))),
+        os.path.realpath("".join((path_to_resource, "/Blue"))),
+        os.path.realpath("".join((path_to_resource, "/Effects/Blue Effects"))),
+        os.path.realpath("".join((path_to_resource, "/Effects/Galaxy"))),
+        os.path.realpath("".join((path_to_resource, "/Effects/Grids"))),
+        os.path.realpath("".join((path_to_resource, "/Effects/Proton Star"))),
+        os.path.realpath("".join((path_to_resource, "/Effects/Red Explosion"))),
+        os.path.realpath("".join((path_to_resource, "/Effects/Fires"))),
+        os.path.realpath("".join((path_to_resource, "/Asteroids"))),
+        os.path.realpath("".join((path_to_resource, "/Background"))),
+    ]
+
+    properties = {
+        "fighter": "fighterProperty.json",
+        "bug": "bugProperty.json",
+        "saucer": "saucerProperty.json",
+        "smallAsteroid": "smallAsteroidProperty.json",
+        "mediumAsteroid": "mediumAsteroidProperty.json",
+        "bigAsteroid": "bigAsteroidProperty.json",
+        "aBullet": "aBullet.json",
+        "sBullet": "sBullet.json",
+        "wBullet": "wBullet.json",
+        "smallStar": "smallStarProperty.json",
+        "mediumStar": "mediumStarProperty.json",
+        "bigStar": "bigStarProperty.json",
+    }
+
+    def __init__(self):
+        self.resource_paths = self.resource_paths
         super(ResourcesLoader, self).__init__(path=self.resource_paths)
         self.reindex()
+
+        self.jsonManager = JsonManager( work_dir=os.path.realpath("%s\\..\\resources\\" % self.dir_path))
+        for key, value in self.properties.items():
+            self.jsonManager.addJsonData(key, value)
+
+    def getPropertyManager(self):
+        return PropertyManager(self.jsonManager)
+
 
     def _center_image(self, image):
         image.anchor_x = image.width / 2

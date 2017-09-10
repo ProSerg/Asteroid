@@ -1,16 +1,7 @@
-import pyglet
-from pyglet.window import key
-from Asteroid.common.Figure import *
-from pyglet.graphics import *
 from Asteroid.Items.ItemObject import ItemObject
-from Asteroid.Items.ItemObject import ItemObject
-from Asteroid.UserUI import UserUI
-from Asteroid.common.Resources import *
 from Asteroid.common.Figure import *
 from Asteroid.common.Mechanics import *
-
-import pyglet.gl as gl
-
+from Asteroid.common.Resources import *
 
 
 def isCircleToRect(cx, cy, radius, rx, ry, width, height):

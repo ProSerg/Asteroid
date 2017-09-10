@@ -22,19 +22,18 @@ class ASprite(pyglet.sprite.Sprite):
 
 class UnitManager(object):
 
-    def __init__(self, loader, batch):
+    def __init__(self, loader):
         self.loader = loader
-        self.batch = batch
         self._units = []
 
-    def get_sprite(self, name="", x=0, y=0, rotation=0, group=None, scale=1.0, anchor="center"):
+    def get_sprite(self, name="", x=0, y=0, rotation=0, batch=None, group=None, scale=1.0, anchor="center"):
 
         image = self.loader.create_image(image=name, anchor=anchor)
 
         new_sprite = ASprite(
             img=image,
             group=group,
-            batch=self.batch,
+            batch=batch,
             x=x,
             y=y,
             rotation=rotation,

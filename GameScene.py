@@ -59,7 +59,7 @@ class GameScene(pyglet.window.Window):
         self.fps_display = pyglet.window.FPSDisplay(window=self)
 
         self._debug = DEBUG_MOD
-        self.loader = ResourcesLoader(self.resource_paths)
+        self.loader = ResourcesLoader()
         self.master = GameMaster(loader=self.loader , batch=self.get_batch())
         self.user_ship = None
         self._start_ship_position = Point(400, 350)
@@ -107,17 +107,6 @@ class GameScene(pyglet.window.Window):
         self.arrivalShip()
         self._background = self.master.createBackGround()
 
-
-    def create_batch(self, name, status=True):
-        self._curr_batch = BatchOp(name, status)
-        self.batches.update({name: self._curr_batch})
-
-    def get_batch(self, name=None):
-        if name is not None:
-            return self.batches.get(name).batch
-        else:
-            return self._curr_batch.batch
-
     def set_main_batch(self, name):
         self.main_batch = self.batches.get(name).batch
 
@@ -146,7 +135,6 @@ class GameScene(pyglet.window.Window):
             self.bullets.append(bullet)
 
     def on_mouse_press(self, x, y, button, modifiers):
-        print("press ", x, y)
         if self.user_ship.getVisible() is True:
             self.user_ship.mechanic.on_mouse_press(x, y, button, modifiers)
 

@@ -17,10 +17,16 @@ class SceneManager(object):
     def __init__(self, start, scenes, x=640, y=360, title="Untitled",
                  fps=30, show_fps=False):
         """Initialize and run."""
+
         self.running = True
         self.current = start
         self.scenes = scenes
+
+        for key, item in scenes.items():
+            item.init()
+
         self.window = pyglet.window.Window(x, y, title)
+
         pyglet.clock.schedule_interval(self.on_step, 1.0 / fps)
 
         self.show_fps = show_fps
@@ -63,6 +69,13 @@ class SceneManager(object):
 
         @self.window.event
         def on_key_press(symbol, modifiers):
+            if symbol == pyglet.window.key._1:
+                print("Current menu: {}".format("menu"))
+                self.current = "menu"
+            elif symbol == pyglet.window.key._2:
+                self.current = "game"
+                print("Current menu: {}".format("game"))
+
             self.scenes[self.current].on_key_press(self, symbol, modifiers)
 
         @self.window.event
@@ -216,12 +229,59 @@ class MenuScene(Scene):
         # self.snake = pyglet.sprite.Sprite ( pyglet.image.load("snake.png") )
         # self.snake.position = 320, 0
 
+    def init(self):
+        # background = pyglet.graphics.OrderedGroup(0)
+        self.batch = pyglet.graphics.Batch()
+        self._label = pyglet.text.Label(
+            text='<< MenuScene >>',
+            x=50, y=200,
+            anchor_x='center',
+            batch=self.batch,
+            group=None)
+
+    def on_step(self, app, dt):
+        print("Step: {}".format(dt))
+
+
     def on_draw(self, manager):
         super().on_draw(manager)
         manager.window.clear()
+        self.batch.draw()
         # self.bg.blit(0, 0)
         # self.snake.draw()
 
 
+class GameScene(Scene):
+    def __int__(self, batch):
+        super().__init__()
+        self._batch = batch
+        background = pyglet.graphics.OrderedGroup(0)
+
+
+    def init(self):
+        # background = pyglet.graphics.OrderedGroup(0)
+        self.batch = pyglet.graphics.Batch()
+        self._label = pyglet.text.Label(
+            text='<< GameScene: >>',
+            x=50, y=100,
+            anchor_x='center',
+            batch=self.batch,
+            group=None)
+
+    def on_step(self, app, dt):
+        print("Step: {}".format(dt))
+
+    def on_draw(self, manager):
+        super().on_draw(manager)
+        manager.window.clear()
+        self.batch.draw()
+
+
+
 if __name__ == '__main__':
-    SceneManager("menu", {"menu": MenuScene()}, show_fps=True)
+    scens = {
+        "menu": MenuScene(),
+        "game": GameScene()
+    }
+
+    SceneManager("menu", scens, show_fps=True)
