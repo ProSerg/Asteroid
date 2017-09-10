@@ -286,7 +286,7 @@ class GameMaster(object):
             ship.add(engine2)
         return ship
 
-    def make_star(self, x, y, type):
+    def make_star(self, x, y, batch, type):
         root = "{}Star".format(type.value)
 
         star_sprite = self.anim_manager.getSpringEffect(
@@ -296,6 +296,7 @@ class GameMaster(object):
             scale=self.propertyManager.get_sprite(root, SpriteParameter.SCALE),
             looped=self.propertyManager.get_sprite(root, SpriteParameter.LOOPED),
             duration=self.propertyManager.get_sprite(root, SpriteParameter.DURATION),
+            batch=batch,
             rotation=self.propertyManager.get_sprite(root, SpriteParameter.ROTATION))
 
         star_mechanics = StarMechanics(
@@ -316,11 +317,12 @@ class GameMaster(object):
 
         return star
 
-    def make_bullet(self, x, y, rotation, weapon, scale=1.0):
+    def make_bullet(self, x, y, rotation, batch, weapon, scale=1.0):
         bullet_sprite = self.unit_manager.get_sprite(
             name=self.propertyManager.get_sprite(weapon, SpriteParameter.FILENAME),
             scale=self.propertyManager.get_sprite(weapon, SpriteParameter.SCALE)*scale,
             rotation=self.propertyManager.get_sprite(weapon, SpriteParameter.ROTATION),
+            batch=batch,
             group=self.loader.effects,
         )
 

@@ -228,12 +228,7 @@ class FighterMechanics(BaseMechanics):
         self.starting_live = self.live
         self.energy = self.power_bank
 
-        self.key_handler = {
-            key.UP : False,
-            key.DOWN : False,
-            key.LEFT : False,
-            key.RIGHT : False,
-        }
+        self.key_handler = key_handler
         self._time_reload_weapon = 0
         self._time_reload_engine = 0
         self._get_damage = 0
@@ -285,47 +280,18 @@ class FighterMechanics(BaseMechanics):
         if symbol == pyglet.window.key.W:
             self._shot = True
 
-        for _key in self.key_handler.keys():
-            self.key_handler[_key] = False
-
-        if symbol == pyglet.window.key.LEFT:
-            self.key_handler[key.LEFT] = True
-
-        if symbol == pyglet.window.key.RIGHT:
-            self.key_handler[key.RIGHT] = True
-
-        if symbol == pyglet.window.key.UP:
-            self.key_handler[key.UP] = True
-
-        if symbol == pyglet.window.key.DOWN:
-            self.key_handler[key.DOWN] = True
-
-
-
 
     def on_key_release(self, symbol, modifiers):
         if symbol == pyglet.window.key.W:
             self._shot = False
 
-        if symbol == pyglet.window.key.LEFT:
-            self.key_handler[key.LEFT] = False
-
-        if symbol == pyglet.window.key.RIGHT:
-            self.key_handler[key.RIGHT] = False
-
-        if symbol == pyglet.window.key.UP:
-            self.key_handler[key.UP] = False
-
-        if symbol == pyglet.window.key.DOWN:
-            self.key_handler[key.DOWN] = False
-
-    def shot(self, x, y):
+    def shot(self, x, y, batch):
         if self._shot is True:
             self._shot = False
             if self.charge > self._cost_bullet:
                 self.charge -= self._cost_bullet
                 self._time_reload_weapon = self._const_reload_weapon_time
-                bullet = self.callbackShoot(x, y, self.rotation, self.weapon)
+                bullet = self.callbackShoot(x, y, self.rotation, batch, self.weapon)
                 return bullet
         return None
 
@@ -553,14 +519,14 @@ class SaucerMechanics(BaseMechanics):
         print("Mouse: {}{}".format(self._mouse_x, self._mouse_y))
 
 
-    def shot(self, x, y):
+    def shot(self, x, y, batch):
         if self._shot is True:
             if self._time_last_shoot <= 0 and self._reload_weapon is False:
                 if self.charge > self._cost_bullet:
                     self.charge -= self._cost_bullet
                     self._time_reload_weapon = self._const_reload_weapon_time
                     rotation = self.calcRotate(Point(x,y), Point(self._mouse_x, self._mouse_y))
-                    bullet = self.callbackShoot(x, y, rotation, self.weapon)
+                    bullet = self.callbackShoot(x, y, rotation, batch, self.weapon)
                     self._time_last_shoot = self._firing_speed
                     return bullet
                 else:
@@ -766,7 +732,7 @@ class BugMechanics(BaseMechanics):
             self._shot = True
             self._up_weapon = False
 
-    def shot(self, x, y):
+    def shot(self, x, y, batch):
         if self._shot is True:
             self._shot = False
             self._up_weapon = False
@@ -774,7 +740,7 @@ class BugMechanics(BaseMechanics):
                 self._time_reload_weapon = self._const_reload_weapon_time
                 bullets = []
                 for idx in range(int(self.charge/self._cost_bullet)):
-                    bullet = self.callbackShoot(x, y, self.rotation, self.weapon, int(self.charge/self._cost_bullet))
+                    bullet = self.callbackShoot(x, y, self.rotation, batch, self.weapon, int(self.charge/self._cost_bullet))
                     bullets.append(bullet)
                 # bullet.mechanic.damage *= self.charge/self._cost_bullet
                 self.charge = 0
