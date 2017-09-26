@@ -1,6 +1,9 @@
 """Pyglet scene manager."""
 
 import pyglet
+pyglet.lib.load_library('avbin')
+pyglet.have_avbin=True
+
 from Asteroid.common.Resources import *
 from Asteroid.GameMaster import *
 
@@ -66,6 +69,7 @@ class SceneManager(object):
 
         self.create_batch(self.__BATCH_MAIN_NAME__)
         self.set_main_batch(self.__BATCH_MAIN_NAME__)
+        pyglet.options['audio'] = ('openal', 'silent')
 
         self.loader = ResourcesLoader()
         self.master = GameMaster(loader=self.loader)

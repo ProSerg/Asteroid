@@ -42,7 +42,7 @@ class GameScene(Scene):
             self._start_ship_position.y,
             batch=self.batch,
             group=self.loader.effects)
-
+        self.master.loader.getSpring("portal").play()
         self.user_ship.update_pos(
             x=self._start_ship_position.x,
             y=self._start_ship_position.y,
@@ -248,6 +248,7 @@ class GameScene(Scene):
                         "asteroid_boom",
                         obj.sprite.x, obj.sprite.y,
                         batch=self.batch, group=self.loader.effects)
+                    self.master.loader.getSpring("bum").play()
                     splinters = self.master.generate_splinters(obj, self.batch)
                     for item in splinters:
                         self.add_item(item)
@@ -268,6 +269,7 @@ class GameScene(Scene):
                         "ship_boom",
                         self.user_ship.sprite.x, self.user_ship.sprite.y,
                         batch=self.batch, group=self.loader.effects)
+                    self.master.loader.getSpring("destroy").play()
                     self.del_item(self.user_ship)
                 else:
                     bullet = self.user_ship.mechanic.shot(
@@ -275,6 +277,7 @@ class GameScene(Scene):
                         self.user_ship.y,
                         self.batch)
                     if bullet:
+                        self.master.loader.getSpring("shot").play()
                         self.add_bullet(bullet)
 
         for obj in self.bullets:
