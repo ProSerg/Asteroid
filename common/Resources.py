@@ -1,9 +1,11 @@
+import os
+
 import pyglet
 from pyglet.image import Animation, AnimationFrame
 from pyglet.resource import Loader
 
 from .ResourceManager import *
-import os
+
 
 class ResourcesLoader(Loader):
     background = pyglet.graphics.OrderedGroup(0)
@@ -17,6 +19,15 @@ class ResourcesLoader(Loader):
     path_to_resource = "%s\\..\\..\\resources\\" % dir_path
     resource_paths = [
         os.path.realpath("".join((path_to_resource, "/"))),
+        os.path.realpath("".join((path_to_resource, "/Audio"))),
+        os.path.realpath("".join((path_to_resource, "/Audio/Asteroid"))),
+        os.path.realpath("".join((path_to_resource, "/Audio/Bonus"))),
+        os.path.realpath("".join((path_to_resource, "/Audio/Bullet"))),
+        os.path.realpath("".join((path_to_resource, "/Audio/Engine"))),
+        os.path.realpath("".join((path_to_resource, "/Audio/Envirement"))),
+        os.path.realpath("".join((path_to_resource, "/Audio/Game"))),
+        os.path.realpath("".join((path_to_resource, "/Audio/Portal"))),
+        os.path.realpath("".join((path_to_resource, "/Audio/Ship"))),
         os.path.realpath("".join((path_to_resource, "/Blue"))),
         os.path.realpath("".join((path_to_resource, "/Effects/Blue Effects"))),
         os.path.realpath("".join((path_to_resource, "/Effects/Galaxy"))),
@@ -43,14 +54,36 @@ class ResourcesLoader(Loader):
         "bigStar": "bigStarProperty.json",
     }
 
+    sounds = {
+        "bum" : "scrape.mp3",
+        "destroy" : "space_dead.mp3",
+        "portal" : "portal.mp3",
+        "shot" : "shot.mp3",
+    }
+
+    spring = {}
+
     def __init__(self):
         self.resource_paths = self.resource_paths
         super(ResourcesLoader, self).__init__(path=self.resource_paths)
         self.reindex()
 
+        for key, value in self.sounds.items():
+            # p_spring = pyglet.media.load(
+            # "{path}\\{file}".format(
+            #     path=os.path.realpath("%s\\Audio\\" % self.path_to_resource),
+            #     file=value)
+            p_spring = self.media(value, streaming=False)
+            self.spring.update({key: p_spring})
+        # TODO
+
         self.jsonManager = JsonManager( work_dir=os.path.realpath("%s\\..\\resources\\" % self.dir_path))
         for key, value in self.properties.items():
             self.jsonManager.addJsonData(key, value)
+
+    def getSpring(self, id_spring):
+        print(self.spring)
+        return self.spring[id_spring]
 
     def getPropertyManager(self):
         return PropertyManager(self.jsonManager)

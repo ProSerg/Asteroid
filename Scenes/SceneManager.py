@@ -1,13 +1,11 @@
 """Pyglet scene manager."""
 
-import pyglet
-pyglet.lib.load_library('avbin')
-pyglet.have_avbin=True
-
-from Asteroid.common.Resources import *
-from Asteroid.GameMaster import *
-
 import pyglet.window.key
+
+from Asteroid.GameMaster import *
+from Asteroid.common.ResourceManager import *
+from Asteroid.common.Resources import *
+
 
 class BatchOp(object):
     def __init__(self, name, status=True):
@@ -54,8 +52,7 @@ class SceneManager(object):
 
     __BATCH_MAIN_NAME__ = "main_batch"
 
-    def __init__(self, start, scenes, width=800, height=600,  title="Astroide",
-                 fps=120, show_fps=False):
+    def __init__(self, start, scenes, settings):
         """Initialize and run."""
         self.curr_ship = None
         self.batches = {}
@@ -63,23 +60,30 @@ class SceneManager(object):
         self.running = True
         self.current = start
         self.scenes = scenes
+        self.settings = settings
+        self.settings.pyGletSetup()
+        self._fps = self.settings.getParameter(SettingsParameter.FPS)
+        self._width = self.settings.getParameter(SettingsParameter.WIDTH)
+        self._height = self.settings.getParameter(SettingsParameter.HEIGHT)
+        self._tittle = self.settings.getParameter(SettingsParameter.TITTLE)
+        self._show_fps = self.settings.getParameter(SettingsParameter.SHOW_FPS)
 
-        self.window = pyglet.window.Window(width=width, height=height, caption=title)
-        # self.window.push_handlers(self.key_handler)
+        self.window = pyglet.window.Window(
+            width=self._width,
+            height=self._height,
+            caption=self._tittle)
 
         self.create_batch(self.__BATCH_MAIN_NAME__)
         self.set_main_batch(self.__BATCH_MAIN_NAME__)
-        pyglet.options['audio'] = ('openal', 'silent')
 
         self.loader = ResourcesLoader()
         self.master = GameMaster(loader=self.loader)
         for idx, item in scenes.items():
             item.init(self.master, self.window.width, self.window.height)
 
-        pyglet.clock.schedule_interval(self.on_step, 1.0 / fps)
+        pyglet.clock.schedule_interval(self.on_step, 1.0 / self._fps)
+        pyglet.clock.set_fps_limit(self._fps)
 
-        self.show_fps = show_fps
-        pyglet.clock.set_fps_limit(fps)
         self.fps_display = pyglet.window.FPSDisplay(self.window)
 
         @self.window.event
@@ -105,7 +109,7 @@ class SceneManager(object):
         @self.window.event
         def on_draw():
             self.scenes[self.current].on_draw(self)
-            if self.show_fps:
+            if self._show_fps:
                 self.fps_display.draw()
 
         @self.window.event

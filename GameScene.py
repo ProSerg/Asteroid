@@ -1,20 +1,10 @@
-import pyglet
-from pyglet.graphics import *
-import Asteroid.common.util as util
-from Asteroid.common.Figure import *
-from Asteroid.Items.PlayerShip import PlayerShip
-import pyglet.gl as gl
-from pyglet.window import key
-from pathlib import Path
 # Set up a window
 
-from Asteroid.common.Resources import *
-from Asteroid.common.Figure import *
-from Asteroid.common.Mechanics import *
-from Asteroid.GameMaster import *
-from Asteroid.common.ResourceManager import *
 import random
-from GameMaster import TypeAsteroid
+
+from Asteroid.GameMaster import *
+from Asteroid.common.Resources import *
+
 
 class BatchOp(object):
     def __init__(self, name, status=True):
@@ -51,8 +41,8 @@ class GameScene(pyglet.window.Window):
         self.sprites = []
         self._curr_batch = None
 
-        self.create_batch(self.__BATCH_MAIN_NAME__)
-        self.set_main_batch(self.__BATCH_MAIN_NAME__)
+#        self.create_batch(self.__BATCH_MAIN_NAME__)
+#         self.set_main_batch(self.__BATCH_MAIN_NAME__)
         self._dt = 1 / 120.0
         pyglet.clock.schedule_interval(self.update, self._dt)
         # self.key_handler = key.KeyStateHandler()
@@ -60,13 +50,14 @@ class GameScene(pyglet.window.Window):
 
         self._debug = DEBUG_MOD
         self.loader = ResourcesLoader()
-        self.master = GameMaster(loader=self.loader , batch=self.get_batch())
+        self.master = GameMaster(loader=self.loader)
         self.user_ship = None
         self._start_ship_position = Point(400, 350)
 
-        self.master.make_star(-50,-50, TypeAsteroid.MEDIUM)
-        self.master.make_star(-50,-50, TypeAsteroid.BIG)
-        self.master.make_star(-50,-50, TypeAsteroid.SMALL)
+        # TODO
+        # self.master.make_star(-50,-50, TypeAsteroid.MEDIUM)
+        # self.master.make_star(-50,-50, TypeAsteroid.BIG)
+        # self.master.make_star(-50,-50, TypeAsteroid.SMALL)
 
         ## USER SETTINGS
         self._score = 0

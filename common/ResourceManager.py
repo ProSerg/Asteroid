@@ -1,7 +1,6 @@
-import json, os
+import json
 from enum import Enum
-import platform
-import random
+
 
 class SpriteParameter(Enum):
     FILENAME = "file"
@@ -38,6 +37,17 @@ class ObjectParameter(Enum):
     BONUS = "bonus"
     MAX_SPEED = "maxSpeed"
     FIRING_SPEED = "firingSpeed"
+
+class SettingsParameter(Enum):
+    WIDTH = "width"
+    HEIGHT = "height"
+    DEBUG = "debug"
+    FPS = "fps"
+    LOADLIBS = "load_libraries"
+    TITTLE = "tittle"
+    SHOW_FPS = "show_fps"
+
+
 
 class JsonManager(object):
     def __init__(self, work_dir="."):
