@@ -1,10 +1,10 @@
+import random
+
 from Asteroid.common.AnimationManager import *
 from Asteroid.common.Mechanics import *
-from Asteroid.common.ResourceManager import *
 from Asteroid.common.UnitManager import *
-
-from UserUI import *
 from MenuUI import *
+from UserUI import *
 
 
 # Set up a window

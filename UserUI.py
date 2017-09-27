@@ -1,7 +1,7 @@
-import Asteroid.common.Resources as Resources
-from Asteroid.Items.ItemObject import ItemObject
 import pyglet
+
 from Asteroid.common.ResourceManager import *
+
 
 class UserUI(object):
 
@@ -40,6 +40,21 @@ class UserUI(object):
             anchor_x='left',
             batch=self._batch,
             group=group)
+
+        self._gameover = pyglet.text.Label(
+            text='',
+            x=370, y=370,
+            anchor_x='left',
+            batch=self._batch,
+            group=group)
+
+        self._status = pyglet.text.Label(
+            text='',
+            x=350, y=330,
+            anchor_x='left',
+            batch=self._batch,
+            group=group)
+
 
         # self._armor = pyglet.text.Label(
         #     text='Armor: 100 %',
@@ -101,8 +116,17 @@ class UserUI(object):
     def update_ammo(self, value):
         self._ammo.text = ' Ammo:  {} %'.format(value)
 
+    def game_over(self, value, score):
+        if value is True:
+            self._status.text = "YOUR SCORE : {}".format(score)
+            self._gameover.text = "GAME OVER"
+        else:
+            self._status.text = ""
+            self._gameover.text = ""
+
+
     def update_live(self, value):
-         self._live.text = 'x {}'.format(value)
+        self._live.text = 'x {}'.format(value)
 
     def update_energy(self, value):
         self._energy.text = self.textProgress(procent=value)
