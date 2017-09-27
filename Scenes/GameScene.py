@@ -1,6 +1,11 @@
+import random
+
 from Scenes.SceneManager import *
 
+
 class GameScene(Scene):
+    _TIME_WAITE_ = 3
+
     def __int__(self, batch):
         super().__init__()
         # self._batch = batch
@@ -28,7 +33,9 @@ class GameScene(Scene):
         self._ships = 4
         self._score = 0
         self._bonus = 0
-
+        self._level = 1
+        self._count_asteroids = 0
+        self._timer = self._TIME_WAITE_
         self.user_ui = self.master.make_game_ui(
             self.batch)
 
@@ -83,7 +90,9 @@ class GameScene(Scene):
     def restartGame(self):
         self._score = 0
         self._bonus = 0
+        self._level = 1
         self._ships = 4
+        self._count_asteroids = 0
 
         self.user_ship.visible(False)
         self.del_item(self.user_ship)
@@ -110,6 +119,7 @@ class GameScene(Scene):
                 y=random.randint(700, 750),
                 batch=self.batch)
             self.add_item(asteroid)
+            self._count_asteroids += 1
 
     def usePortal(self):
         if self._ships > 0:
@@ -229,7 +239,7 @@ class GameScene(Scene):
 
         for star in self.stars:
             if self.check_collision(self.user_ship, star) is True:
-                self._score += star.mechanic.bonus
+                self._score = self._score + ( star.mechanic.bonus * self._level )
                 star.mechanic.destroy()
                 star.mechanic.used = True
 
@@ -249,9 +259,11 @@ class GameScene(Scene):
                         obj.sprite.x, obj.sprite.y,
                         batch=self.batch, group=self.loader.effects)
                     self.master.loader.getSpring("bum").play()
+                    self._count_asteroids -= 1
                     splinters = self.master.generate_splinters(obj, self.batch)
                     for item in splinters:
                         self.add_item(item)
+                        self._count_asteroids += 1
                     self.stars.append(self.master.make_star(
                         x=obj.sprite.x,
                         y=obj.sprite.y,
@@ -310,12 +322,26 @@ class GameScene(Scene):
         self.user_ui.update_ammo(self.user_ship.mechanic.getAmmo())
         self.user_ui.update_energy(self.user_ship.mechanic.getEnergy())
         self.user_ui.update_live(self._ships)
+        if self._ships == 0 and self.user_ship.live is False:
+            self.user_ui.game_over(True, self._score)
+        else:
+            self.user_ui.game_over(False, self._score)
+
+    def processing_game(self, dt):
+        if self._count_asteroids < 1:
+            if self._timer <= 0:
+                self.create_wave(self._level)
+                self._level += 1
+                self._timer = self._TIME_WAITE_
+            else:
+                self._timer -= dt
 
     def on_step(self, app, dt):
         self.moving(dt)
         self.processing_collisions()
         self.processing_objects(dt)
         self.processing_environment()
+        self.processing_game(dt)
 
     def on_mouse_press(self, app, x, y, button, modifiers):
         if self.user_ship.getVisible() is True:
@@ -340,7 +366,8 @@ class GameScene(Scene):
             self.usePortal()
         elif symbol == pyglet.window.key.R:
             self.usePortal()
-            self.create_wave()
+            self.create_wave(self._level)
+            self._level += 1
         elif symbol == pyglet.window.key.ESCAPE:
             # self.clear_wave()
             # self.restartGame()

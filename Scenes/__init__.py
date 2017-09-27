@@ -4,8 +4,6 @@ from Scenes.MenuScene import *
 from Scenes.SceneManager import *
 
 #TODO
-#3. Next Wave
-#4. End Game
 #6. Light refactoring
 #7. CI/CD
 #8. AutoTest
